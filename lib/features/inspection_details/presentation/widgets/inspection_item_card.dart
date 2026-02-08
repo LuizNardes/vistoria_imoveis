@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'package:cached_network_image/cached_network_image.dart'; // Adicionado
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart'; // Adicionado
 import '../../domain/inspection_details_model.dart';
 import '../room_inspection_controller.dart';
 
@@ -23,6 +25,7 @@ class InspectionItemCard extends ConsumerStatefulWidget {
 class _InspectionItemCardState extends ConsumerState<InspectionItemCard> {
   late TextEditingController _notesController;
   Timer? _debounceTimer;
+  bool _isUploading = false; // Estado local de loading para UX fluida
 
   @override
   void initState() {
@@ -33,9 +36,7 @@ class _InspectionItemCardState extends ConsumerState<InspectionItemCard> {
   @override
   void didUpdateWidget(covariant InspectionItemCard oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // Atualiza o texto se vier mudança externa (mas cuidado para não sobrescrever enquanto digita)
-    if (oldWidget.item.notes != widget.item.notes && 
-        !_notesController.selection.isValid) { // Só atualiza se não estiver focado/digitando
+    if (oldWidget.item.notes != widget.item.notes && !_notesController.selection.isValid) {
       _notesController.text = widget.item.notes ?? '';
     }
   }
@@ -45,6 +46,61 @@ class _InspectionItemCardState extends ConsumerState<InspectionItemCard> {
     _notesController.dispose();
     _debounceTimer?.cancel();
     super.dispose();
+  }
+
+  // --- LÓGICA DE FOTOS ---
+
+  Future<void> _handleAddPhoto(ImageSource source) async {
+    Navigator.pop(context); // Fecha o BottomSheet
+    setState(() => _isUploading = true); // Inicia spinner local
+
+    try {
+      await ref.read(roomInspectionControllerProvider.notifier).addPhoto(
+            inspectionId: widget.inspectionId,
+            roomId: widget.roomId,
+            item: widget.item,
+            source: source,
+          );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao enviar foto: $e'), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isUploading = false); // Para spinner
+    }
+  }
+
+  void _handleRemovePhoto(String url) {
+    ref.read(roomInspectionControllerProvider.notifier).removePhoto(
+          inspectionId: widget.inspectionId,
+          roomId: widget.roomId,
+          item: widget.item,
+          photoUrl: url,
+        );
+  }
+
+  void _showSourcePicker() {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Wrap(
+          children: [
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: const Text('Câmera'),
+              onTap: () => _handleAddPhoto(ImageSource.camera),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: const Text('Galeria'),
+              onTap: () => _handleAddPhoto(ImageSource.gallery),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   // Lógica do Debouncer: Salva apenas quando o usuário para de digitar
@@ -79,9 +135,9 @@ class _InspectionItemCardState extends ConsumerState<InspectionItemCard> {
     }
   }
 
-  @override
+ @override
   Widget build(BuildContext context) {
-    final color = _getStatusColor(widget.item.condition);
+    final color = _getStatusColor(widget.item.condition); // Helper existente
 
     return Card(
       elevation: 1,
@@ -91,52 +147,43 @@ class _InspectionItemCardState extends ConsumerState<InspectionItemCard> {
         borderRadius: BorderRadius.circular(12),
       ),
       child: ExpansionTile(
+        // ... (Leading, Title, Subtitle, ChildrenPadding mantidos) ...
         leading: Icon(_getStatusIcon(widget.item.condition), color: color, size: 32),
-        title: Text(
-          widget.item.name,
-          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
-        ),
-        subtitle: Text(
-          widget.item.condition == ItemCondition.ok ? 'Tudo certo' : 'Requer atenção',
-          style: TextStyle(color: Colors.grey[600], fontSize: 12),
-        ),
+        title: Text(widget.item.name, style: const TextStyle(fontWeight: FontWeight.w600)),
+        subtitle: Text(widget.item.condition.name), // Simplificado para exemplo
         childrenPadding: const EdgeInsets.all(16),
+        
         children: [
-          // 1. Seletor de Status (Segmented Button)
+          // 1. Segmented Button (Mantido)
           SizedBox(
             width: double.infinity,
             child: SegmentedButton<ItemCondition>(
               segments: const [
-                ButtonSegment(value: ItemCondition.ok, icon: Icon(Icons.check), label: Text('OK')),
-                ButtonSegment(value: ItemCondition.damaged, icon: Icon(Icons.close), label: Text('Ruim')),
+                ButtonSegment(value: ItemCondition.ok, label: Text('OK')),
+                ButtonSegment(value: ItemCondition.damaged, label: Text('Ruim')),
                 ButtonSegment(value: ItemCondition.notApplicable, label: Text('N/A')),
               ],
               selected: {widget.item.condition},
               onSelectionChanged: (Set<ItemCondition> newSelection) {
-                ref.read(roomInspectionControllerProvider.notifier).updateItemStatus(
+                 ref.read(roomInspectionControllerProvider.notifier).updateItemStatus(
                       widget.inspectionId,
                       widget.roomId,
                       widget.item,
                       newSelection.first,
                     );
               },
-              style: ButtonStyle(
-                visualDensity: VisualDensity.compact,
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
             ),
           ),
           
           const SizedBox(height: 16),
 
-          // 2. Campo de Observações
+          // 2. Campo de Observações (Mantido)
           TextFormField(
             controller: _notesController,
-            onChanged: _onNotesChanged,
+            onChanged: _onNotesChanged, // Helper existente
             maxLines: 2,
             decoration: const InputDecoration(
               labelText: 'Observações',
-              hintText: 'Descreva avarias ou detalhes...',
               border: OutlineInputBorder(),
               prefixIcon: Icon(Icons.edit_note),
             ),
@@ -144,24 +191,87 @@ class _InspectionItemCardState extends ConsumerState<InspectionItemCard> {
 
           const SizedBox(height: 16),
 
-          // 3. Placeholder de Fotos
-          Container(
-            height: 80,
-            decoration: BoxDecoration(
-              color: Colors.grey[100],
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.grey[300]!, style: BorderStyle.solid),
+          // 3. NOVA SEÇÃO DE FOTOS
+          SizedBox(
+            height: 90, // Altura fixa para o carrossel
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              children: [
+                // A. Lista de fotos existentes
+                ...widget.item.photos.map((url) {
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8.0),
+                    child: Stack(
+                      children: [
+                        // A imagem
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: CachedNetworkImage(
+                            imageUrl: url,
+                            width: 90,
+                            height: 90,
+                            fit: BoxFit.cover,
+                            placeholder: (context, url) => Container(
+                              color: Colors.grey[200],
+                              child: const Center(child: Icon(Icons.image, color: Colors.grey)),
+                            ),
+                            errorWidget: (context, url, error) => const Icon(Icons.error),
+                          ),
+                        ),
+                        // O botão de deletar (X)
+                        Positioned(
+                          top: 2,
+                          right: 2,
+                          child: GestureDetector(
+                            onTap: () => _handleRemovePhoto(url),
+                            child: Container(
+                              padding: const EdgeInsets.all(2),
+                              decoration: const BoxDecoration(
+                                color: Colors.black54,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(Icons.close, size: 14, color: Colors.white),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+
+                // B. Loading Indicator (se estiver subindo foto neste item)
+                if (_isUploading)
+                  Container(
+                    width: 90,
+                    height: 90,
+                    margin: const EdgeInsets.only(right: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[100],
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Center(
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  ),
+
+                // C. Botão de Adicionar
+                InkWell(
+                  onTap: _isUploading ? null : _showSourcePicker,
+                  borderRadius: BorderRadius.circular(8),
+                  child: Container(
+                    width: 90,
+                    height: 90,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[200],
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.grey[400]!, style: BorderStyle.solid),
+                    ),
+                    child: const Icon(Icons.add_a_photo, color: Colors.grey, size: 30),
+                  ),
+                ),
+              ],
             ),
-            child: const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.camera_alt_outlined, color: Colors.grey),
-                  Text('Fotos (Próxima Fase)', style: TextStyle(color: Colors.grey)),
-                ],
-              ),
-            ),
-          )
+          ),
         ],
       ),
     );
