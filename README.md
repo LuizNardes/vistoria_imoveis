@@ -1,110 +1,117 @@
-📱 App de Vistoria Imobiliária (Flutter)
-Este projeto é uma aplicação móvel desenvolvida em Flutter para realizar vistorias de imóveis de forma digital. O app permite gerenciar agendamentos, realizar checklists detalhados por cômodos, capturar evidências fotográficas e gerar automaticamente um Termo de Vistoria em PDF pronto para compartilhamento.
+<div align="center">
 
-✨ Funcionalidades
-Autenticação: Login seguro via Firebase Auth.
+# 📱 Vistoria de Imóveis
 
-Gestão de Vistorias: Listagem de vistorias agendadas, em andamento e concluídas.
+**Uma solução moderna e eficiente para vistorias imobiliárias digitais.**
 
-Checklist Detalhado: Navegação por cômodos (Sala, Cozinha, etc.) e itens (Paredes, Piso, etc.).
+[![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?style=for-the-badge&logo=flutter&logoColor=white)](https://flutter.dev)
+[![Dart](https://img.shields.io/badge/Dart-3.x-0175C2?style=for-the-badge&logo=dart&logoColor=white)](https://dart.dev)
+[![Firebase](https://img.shields.io/badge/Firebase-Core-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)](https://firebase.google.com)
+[![Riverpod](https://img.shields.io/badge/State-Riverpod-purple?style=for-the-badge)](https://riverpod.dev)
 
-Captura de Mídia: Câmera integrada com compressão automática de imagens e upload para Firebase Storage.
+</div>
 
-Offline-First: Suporte a funcionamento offline (sincronização automática quando a rede retorna).
+---
 
-Relatórios: Geração de PDF compilando dados, observações e grade de fotos.
+## 📄 Sobre o Projeto
 
-Compartilhamento: Envio direto do relatório via WhatsApp/E-mail.
+Este projeto é uma aplicação móvel desenvolvida em **Flutter** para realizar vistorias de imóveis de forma digital. O app permite gerenciar agendamentos, realizar checklists detalhados por cômodos, capturar evidências fotográficas e gerar automaticamente um Termo de Vistoria em PDF pronto para compartilhamento.
 
-🛠 Tech Stack
-Framework: Flutter (Dart)
+## ✨ Funcionalidades
 
-Gerenciamento de Estado: Riverpod (com Code Generation & Annotations)
+- **🔐 Autenticação**: Login seguro via Firebase Auth.
+- **📅 Gestão de Vistorias**: Listagem de vistorias agendadas, em andamento e concluídas.
+- **📝 Checklist Detalhado**: Navegação intuitiva por cômodos (Sala, Cozinha, etc.) e itens.
+- **📸 Captura de Mídia**: Câmera integrada com compressão automática e upload para Firebase Storage.
+- **📡 Offline-First**: Suporte a funcionamento offline (sincronização automática quando a rede retorna).
+- **📄 Relatórios PDF**: Geração de laudos completos com fotos e observações.
+- **📤 Compartilhamento**: Envio direto do relatório via WhatsApp ou E-mail.
 
-Backend as a Service: Firebase
+## 📱 Screenshots
 
-Auth (Autenticação)
+<div align="center">
+  <!-- Substitua pelos links reais das suas imagens -->
+  <img src="https://via.placeholder.com/200x400?text=Login" alt="Login Screen" height="400" style="margin: 5px;"/>
+  <img src="https://via.placeholder.com/200x400?text=Home" alt="Home Screen" height="400" style="margin: 5px;"/>
+  <img src="https://via.placeholder.com/200x400?text=Checklist" alt="Checklist Screen" height="400" style="margin: 5px;"/>
+</div>
 
-Firestore (Banco de Dados NoSQL)
+## 🛠 Tech Stack
 
-Storage (Armazenamento de Fotos)
+O projeto utiliza as melhores práticas e bibliotecas do ecossistema Flutter:
 
-Navegação: GoRouter
+| Categoria | Tecnologia |
+|-----------|------------|
+| **Framework** | Flutter (Dart) |
+| **Gerência de Estado** | Riverpod (Generator & Annotations) |
+| **Backend** | Firebase (Auth, Firestore, Storage) |
+| **Navegação** | GoRouter |
+| **Imutabilidade** | Freezed & JsonSerializable |
+| **PDF** | pdf & printing |
 
-Imutabilidade & Serialização: Freezed & JsonSerializable
+## 📂 Estrutura do Projeto
 
-PDF: pdf & printing
+Arquitetura baseada em **Features** para escalabilidade:
 
-📂 Estrutura do Projeto
-O projeto segue uma arquitetura baseada em Features (Feature-first), facilitando a escalabilidade e manutenção:
-
+```
 lib/
 ├── core/                  # Configurações globais (Router, Theme, Exceptions)
 ├── features/
 │   ├── auth/              # Login e Autenticação
 │   ├── home/              # Dashboard e Listagem
-│   ├── inspections/       # CRUD de Vistorias (Cabeçalho)
+│   ├── inspections/       # CRUD de Vistorias
 │   ├── inspection_details/# Lógica de Cômodos, Itens e Fotos
 │   └── reports/           # Geração e Visualização de PDF
-├── shared/                # Widgets reutilizáveis (Inputs, Cards, Loaders)
-└── main.dart              # Ponto de entrada
-🚀 Get Started (Como rodar o projeto)
-Pré-requisitos
-Flutter SDK instalado e configurado no PATH.
+├── shared/                # Widgets reutilizáveis
+└── main.dart              # Entry point
+```
 
-VS Code ou Android Studio.
+## 🚀 Como Rodar o Projeto
 
-Uma conta no Google para configurar o Firebase.
+### Pré-requisitos
 
-Firebase CLI instalado (npm install -g firebase-tools).
+- Flutter SDK instalado.
+- Conta no Firebase.
+- Firebase CLI (`npm install -g firebase-tools`).
 
-Passo 1: Clonar e Instalar Dependências
-Bash
-git clone https://seu-repositorio.git
-cd seu-projeto
-flutter pub get
-Passo 2: Configuração do Firebase
-Este projeto depende do Firebase. Você precisa configurar o seu próprio projeto no console do Firebase:
+### Passo a Passo
 
-Crie um projeto em console.firebase.google.com.
+1. **Clone o repositório**
+   ```bash
+   git clone https://github.com/seu-usuario/vistoria_imoveis.git
+   cd vistoria_imoveis
+   flutter pub get
+   ```
 
-Ative o Authentication (Email/Password).
+2. **Configuração do Firebase**
+   - Crie um projeto no Firebase Console.
+   - Ative **Authentication** (Email/Password).
+   - Crie o **Firestore Database** e **Storage**.
+   - Configure no terminal:
+     ```bash
+     firebase login
+     flutterfire configure
+     ```
 
-Crie um banco Firestore e configure as regras de segurança.
+3. **Geração de Código**
+   O projeto usa `build_runner` para gerar arquivos `.g.dart` e `.freezed.dart`.
+   ```bash
+   dart run build_runner build -d
+   ```
 
-Ative o Storage e configure as regras de segurança.
+4. **Executar**
+   ```bash
+   flutter run
+   ```
 
-No terminal, faça login e configure o projeto localmente:
+## 🔒 Regras de Segurança (Dev)
 
-Bash
-firebase login
-flutterfire configure
-Siga os passos na tela e selecione o projeto que você criou. Isso irá gerar/atualizar o arquivo lib/firebase_options.dart.
+Sugestão de regras para ambiente de desenvolvimento no Firebase:
 
-Passo 3: Geração de Código (Build Runner)
-Como utilizamos Riverpod Generator e Freezed, é necessário rodar o gerador de código para criar os arquivos .g.dart e .freezed.dart.
+<details>
+<summary><strong>Firestore Rules</strong></summary>
 
-Para rodar uma única vez:
-
-Bash
-dart run build_runner build -d
-Para deixar rodando em modo "watch" (recomendado durante o desenvolvimento):
-
-Bash
-dart run build_runner watch -d
-(Mantenha este terminal aberto enquanto programa).
-
-Passo 4: Rodar o App
-Conecte um dispositivo físico ou inicie um emulador e rode:
-
-Bash
-flutter run
-🔒 Regras do Firebase (Sugestão para Dev)
-Para desenvolvimento, você pode usar as seguintes regras no Firebase Console (Lembre-se de restringir mais para produção):
-
-Firestore Rules:
-
-JavaScript
+```javascript
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -113,9 +120,13 @@ service cloud.firestore {
     }
   }
 }
-Storage Rules:
+```
+</details>
 
-JavaScript
+<details>
+<summary><strong>Storage Rules</strong></summary>
+
+```javascript
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
@@ -124,15 +135,19 @@ service firebase.storage {
     }
   }
 }
-🤝 Como Contribuir
-Crie uma Branch para sua feature (git checkout -b feature/MinhaNovaFeature).
+```
+</details>
 
-Não altere arquivos .g.dart ou .freezed.dart manualmente. Sempre use o build_runner.
+## 🤝 Como Contribuir
 
-Commit suas mudanças (git commit -m 'Add: nova funcionalidade').
+1. Faça um Fork do projeto.
+2. Crie uma Branch para sua Feature (`git checkout -b feature/IncrivelFeature`).
+3. Commit suas mudanças (`git commit -m 'Add: IncrivelFeature'`).
+4. Push para a Branch (`git push origin feature/IncrivelFeature`).
+5. Abra um Pull Request.
 
-Push para a Branch (git push origin feature/MinhaNovaFeature).
+---
 
-Abra um Pull Request.
-
-Desenvolvido com 💙 e Flutter.
+<div align="center">
+  Desenvolvido com 💙 e Flutter
+</div>
