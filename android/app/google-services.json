@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "340371444506",
+    "project_id": "vistorias-imovel",
+    "storage_bucket": "vistorias-imovel.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:340371444506:android:8bb8bc73e33719985b52a3",
+        "android_client_info": {
+          "package_name": "br.com.vistoria.vistoria_imoveis"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCSognfy_f2B-_MqRLKixjVQQ0Ca3l7k7w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
