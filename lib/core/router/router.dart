@@ -10,6 +10,7 @@ import '../../features/home/presentation/home_screen.dart';
 import '../../features/inspections/presentation/create_inspection_screen.dart';
 import '../../features/inspection_details/presentation/inspection_details_screen.dart';
 import '../../features/inspection_details/presentation/room_inspection_screen.dart';
+import '../../features/reports/presentation/report_preview_screen.dart';
 
 part 'router.g.dart';
 
@@ -72,6 +73,13 @@ GoRouter router(RouterRef ref) {
             },
           ),
         ],
+      ),
+      GoRoute(
+        path: '/report-preview/:inspectionId',
+        builder: (context, state) {
+          final inspectionId = state.pathParameters['inspectionId']!;
+          return ReportPreviewScreen(inspectionId: inspectionId);
+        },
       ),
     ],
 

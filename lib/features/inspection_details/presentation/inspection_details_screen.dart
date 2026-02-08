@@ -33,6 +33,15 @@ class InspectionDetailsScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Cômodos da Vistoria'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.picture_as_pdf),
+            tooltip: 'Gerar Relatório',
+            onPressed: () {
+              context.push('/report-preview/$inspectionId');
+            },
+          ),
+        ],
       ),
       body: roomsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),

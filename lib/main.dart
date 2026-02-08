@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'core/router/router.dart';
+import 'core/theme/app_theme.dart';
 
 void main() async {
   // 1. Garante que a engine do Flutter esteja pronta antes de código nativo
@@ -33,10 +34,9 @@ class VistoriaApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       
       // Configuração de Tema (Placeholder para lib/core/theme)
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-        useMaterial3: true,
-      ),
+      theme: AppTheme.light,
+      darkTheme: AppTheme.dark,
+      themeMode: ThemeMode.system,
 
       // Configuração do GoRouter
       routerConfig: router, 
