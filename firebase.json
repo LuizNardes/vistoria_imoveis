@@ -1,1 +1,31 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"vistorias-imovel","appId":"1:340371444506:android:8bb8bc73e33719985b52a3","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"vistorias-imovel","configurations":{"android":"1:340371444506:android:8bb8bc73e33719985b52a3","ios":"1:340371444506:ios:75b1d69e2ccdd6975b52a3","macos":"1:340371444506:ios:75b1d69e2ccdd6975b52a3","web":"1:340371444506:web:c74e929df5c2454c5b52a3","windows":"1:340371444506:web:a2e4ff77d953cd465b52a3"}}}}}}
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "vistorias-imovel",
+          "appId": "1:340371444506:android:8bb8bc73e33719985b52a3",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "vistorias-imovel",
+          "configurations": {
+            "android": "1:340371444506:android:8bb8bc73e33719985b52a3",
+            "ios": "1:340371444506:ios:75b1d69e2ccdd6975b52a3",
+            "macos": "1:340371444506:ios:75b1d69e2ccdd6975b52a3",
+            "web": "1:340371444506:web:c74e929df5c2454c5b52a3",
+            "windows": "1:340371444506:web:a2e4ff77d953cd465b52a3"
+          }
+        }
+      }
+    }
+  },
+  "firestore": {
+    "database": "(default)",
+    "location": "southamerica-east1",
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  }
+}

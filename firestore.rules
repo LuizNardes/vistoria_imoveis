@@ -1,0 +1,66 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // --- FUNÇÕES AUXILIARES (HELPERS) ---
+
+    // Verifica se o usuário está logado
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Verifica se o UID do usuário bate com o ID solicitado
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Verifica se o campo 'userId' do documento sendo criado/editado pertence ao usuário
+    function isResourceOwner() {
+      // Para CREATE: Verifica o dado que está chegando
+      // Para UPDATE/DELETE: Verifica o dado que já existe no banco
+      return isAuthenticated() && 
+        (resource == null ? request.resource.data.userId == request.auth.uid 
+                          : resource.data.userId == request.auth.uid);
+    }
+
+    // Verifica se o dono do documento pai (Inspection) é o usuário atual
+    // Custo: Cobra 1 leitura extra no Firestore por validação
+    function isParentInspectionOwner(inspectionId) {
+      let inspectionData = get(/databases/$(database)/documents/inspections/$(inspectionId)).data;
+      return isAuthenticated() && inspectionData.userId == request.auth.uid;
+    }
+
+    // --- REGRAS DAS COLEÇÕES ---
+
+    // 1. Coleção USERS
+    // Usuário só pode ler/escrever seu próprio perfil
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    // 2. Coleção INSPECTIONS
+    match /inspections/{inspectionId} {
+      // Regra base: O campo userId deve bater com o UID do usuário
+      allow create: if request.resource.data.userId == request.auth.uid;
+      allow read, update, delete: if resource.data.userId == request.auth.uid;
+
+      // 3. Sub-coleção ROOMS
+      match /rooms/{roomId} {
+        // Herança de permissão: Checa o documento pai (Inspection)
+        allow read, write: if isParentInspectionOwner(inspectionId);
+
+        // 4. Sub-coleção ITEMS (aninhada em ROOMS)
+        match /items/{itemId} {
+          allow read, write: if isParentInspectionOwner(inspectionId);
+        }
+      }
+    }
+    
+    // BLOQUEIO PADRÃO (Deny All)
+    // Qualquer outra rota não especificada acima será negada
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

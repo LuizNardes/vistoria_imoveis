@@ -1,20 +1,43 @@
+import 'dart:async';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'firebase_options.dart';
 import 'core/router/router.dart';
 import 'core/theme/app_theme.dart';
+import 'core/services/connectivity_service.dart';
+import 'shared/widgets/offline_banner.dart';
+import 'shared/widgets/custom_error_screen.dart';
 
 void main() async {
-  // 1. Garante que a engine do Flutter esteja pronta antes de código nativo
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // 1. Intercepta erros de construção de Widgets (Substitui Red Screen of Death)
+  ErrorWidget.builder = (FlutterErrorDetails details) {
+    return CustomErrorScreen(details: details);
+  };
+
+  // 2. Garante inicialização da Engine
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 2. Inicializa o Firebase com a configuração da plataforma específica
+  // 3. Inicializa Firebase
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  // 3. Executa o App envolto no ProviderScope (Mandatório para Riverpod)
+  // 4. Configura Crashlytics para erros do Flutter (Tela vermelha / Widgets)
+  FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+
+  // 5. Configura Crashlytics para erros Assíncronos (Futures, Streams fora da árvore de widgets)
+  PlatformDispatcher.instance.onError = (error, stack) {
+    FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+    return true;
+  };
+
+  // 5. Executa o App
   runApp(
     const ProviderScope(
       child: VistoriaApp(),
@@ -28,18 +51,18 @@ class VistoriaApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
-    
+
     return MaterialApp.router(
-      title: 'Vistoria de Imóveis',
+      title: 'Vistoria Imóveis',
       debugShowCheckedModeBanner: false,
-      
-      // Configuração de Tema (Placeholder para lib/core/theme)
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
       themeMode: ThemeMode.system,
-
-      // Configuração do GoRouter
-      routerConfig: router, 
+      routerConfig: router,
+      builder: (context, child) {
+        // Garante que o banner flutue sobre qualquer tela do app
+        return OfflineBannerWrapper(child: child ?? const SizedBox());
+      },
     );
   }
 }

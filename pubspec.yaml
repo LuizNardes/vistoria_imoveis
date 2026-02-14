@@ -20,7 +20,9 @@ dependencies:
   firebase_core: ^2.24.2
   firebase_auth: ^4.16.0
   cloud_firestore: ^4.14.0
-  
+  firebase_crashlytics: ^3.4.8
+  firebase_analytics: ^10.7.4
+
   # --- State Management & DI (Riverpod) ---
   flutter_riverpod: ^2.4.9
   riverpod_annotation: ^2.3.3
@@ -33,6 +35,10 @@ dependencies:
   flutter_image_compress: ^2.1.0
   path_provider: ^2.1.2
   cached_network_image: ^3.3.0
+
+  # Conectividade e Testes
+  connectivity_plus: ^5.0.2
+  internet_connection_checker: ^1.0.0+1
 
   # --- Utils ---
   json_annotation: ^4.8.1
@@ -49,7 +55,10 @@ dependencies:
   flutter_svg: ^2.2.3
 
 dev_dependencies:
+    # --- Testing ---   
   flutter_test:
+    sdk: flutter
+  integration_test :
     sdk: flutter
 
   # --- Code Generation ---
@@ -62,6 +71,8 @@ dev_dependencies:
   flutter_lints: ^3.0.0
   custom_lint: ^0.6.2
   riverpod_lint: ^2.3.7
+  flutter_launcher_icons: ^0.14.4
+  flutter_native_splash: ^2.4.7
 
 flutter:
   uses-material-design: true
