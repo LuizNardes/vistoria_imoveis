@@ -3,7 +3,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 // Imports dos Models
 import '../../inspections/domain/inspection.dart';
-import '../../inspection_details/domain/inspection_details_model.dart';
+import '../../inspection_details/domain/inspection_details_models.dart';
 
 part 'report_repository.g.dart';
 

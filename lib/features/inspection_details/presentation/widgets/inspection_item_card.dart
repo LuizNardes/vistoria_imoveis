@@ -1,9 +1,10 @@
-import 'dart:async';
-import 'package:cached_network_image/cached_network_image.dart'; // Adicionado
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:image_picker/image_picker.dart'; // Adicionado
-import '../../domain/inspection_details_model.dart';
+import 'package:image_picker/image_picker.dart';
+
+// Imports dos Models e Controller
+import '../../domain/inspection_details_models.dart';
 import '../room_inspection_controller.dart';
 
 class InspectionItemCard extends ConsumerStatefulWidget {
@@ -23,9 +24,9 @@ class InspectionItemCard extends ConsumerStatefulWidget {
 }
 
 class _InspectionItemCardState extends ConsumerState<InspectionItemCard> {
+  // Estado local para feedback visual imediato sem rebuildar a lista inteira
+  bool _isUploading = false;
   late TextEditingController _notesController;
-  Timer? _debounceTimer;
-  bool _isUploading = false; // Estado local de loading para UX fluida
 
   @override
   void initState() {
@@ -33,26 +34,27 @@ class _InspectionItemCardState extends ConsumerState<InspectionItemCard> {
     _notesController = TextEditingController(text: widget.item.notes);
   }
 
+  // Garante que o controller de texto atualize se o item mudar externamente
   @override
   void didUpdateWidget(covariant InspectionItemCard oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.item.notes != widget.item.notes && !_notesController.selection.isValid) {
-      _notesController.text = widget.item.notes ?? '';
+    if (widget.item.notes != oldWidget.item.notes && 
+        widget.item.notes != _notesController.text) {
+        _notesController.text = widget.item.notes ?? '';
     }
   }
 
   @override
   void dispose() {
     _notesController.dispose();
-    _debounceTimer?.cancel();
     super.dispose();
   }
 
-  // --- LÓGICA DE FOTOS ---
+  // --- AÇÕES ---
 
   Future<void> _handleAddPhoto(ImageSource source) async {
     Navigator.pop(context); // Fecha o BottomSheet
-    setState(() => _isUploading = true); // Inicia spinner local
+    setState(() => _isUploading = true); // Inicia Spinner
 
     try {
       await ref.read(roomInspectionControllerProvider.notifier).addPhoto(
@@ -68,7 +70,7 @@ class _InspectionItemCardState extends ConsumerState<InspectionItemCard> {
         );
       }
     } finally {
-      if (mounted) setState(() => _isUploading = false); // Para spinner
+      if (mounted) setState(() => _isUploading = false); // Para Spinner
     }
   }
 
@@ -103,64 +105,41 @@ class _InspectionItemCardState extends ConsumerState<InspectionItemCard> {
     );
   }
 
-  // Lógica do Debouncer: Salva apenas quando o usuário para de digitar
-  void _onNotesChanged(String value) {
-    if (_debounceTimer?.isActive ?? false) _debounceTimer!.cancel();
-    
-    _debounceTimer = Timer(const Duration(milliseconds: 800), () {
-      ref.read(roomInspectionControllerProvider.notifier).updateItemNotes(
-            widget.inspectionId,
-            widget.roomId,
-            widget.item,
-            value,
-          );
-    });
-  }
-
+  // --- UI HELPERS ---
+  
   Color _getStatusColor(ItemCondition condition) {
     switch (condition) {
       case ItemCondition.ok: return Colors.green;
       case ItemCondition.damaged: return Colors.red;
       case ItemCondition.repairNeeded: return Colors.orange;
       case ItemCondition.notApplicable: return Colors.grey;
+      default: return Colors.grey;
     }
   }
 
-  IconData _getStatusIcon(ItemCondition condition) {
-    switch (condition) {
-      case ItemCondition.ok: return Icons.check_circle;
-      case ItemCondition.damaged: return Icons.cancel;
-      case ItemCondition.repairNeeded: return Icons.warning_amber_rounded;
-      case ItemCondition.notApplicable: return Icons.block;
-    }
-  }
-
- @override
+  @override
   Widget build(BuildContext context) {
-    final color = _getStatusColor(widget.item.condition); // Helper existente
+    final color = _getStatusColor(widget.item.condition);
 
     return Card(
-      elevation: 1,
+      elevation: 2,
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       shape: RoundedRectangleBorder(
         side: BorderSide(color: color.withOpacity(0.5), width: 1),
         borderRadius: BorderRadius.circular(12),
       ),
       child: ExpansionTile(
-        // ... (Leading, Title, Subtitle, ChildrenPadding mantidos) ...
-        leading: Icon(_getStatusIcon(widget.item.condition), color: color, size: 32),
+        leading: Icon(Icons.circle, color: color, size: 24),
         title: Text(widget.item.name, style: const TextStyle(fontWeight: FontWeight.w600)),
-        subtitle: Text(widget.item.condition.name), // Simplificado para exemplo
         childrenPadding: const EdgeInsets.all(16),
-        
         children: [
-          // 1. Segmented Button (Mantido)
+          // 1. Selector de Status (SegmentedButton ou Dropdown - simplificado aqui)
           SizedBox(
             width: double.infinity,
             child: SegmentedButton<ItemCondition>(
               segments: const [
                 ButtonSegment(value: ItemCondition.ok, label: Text('OK')),
-                ButtonSegment(value: ItemCondition.damaged, label: Text('Ruim')),
+                ButtonSegment(value: ItemCondition.damaged, label: Text('Avariado')),
                 ButtonSegment(value: ItemCondition.notApplicable, label: Text('N/A')),
               ],
               selected: {widget.item.condition},
@@ -177,48 +156,53 @@ class _InspectionItemCardState extends ConsumerState<InspectionItemCard> {
           
           const SizedBox(height: 16),
 
-          // 2. Campo de Observações (Mantido)
+          // 2. Campo de Observações
           TextFormField(
             controller: _notesController,
-            onChanged: _onNotesChanged, // Helper existente
+            onChanged: (val) {
+                // Implementar debounce aqui se desejar
+                ref.read(roomInspectionControllerProvider.notifier).updateItemNotes(
+                  widget.inspectionId, widget.roomId, widget.item, val
+                );
+            },
             maxLines: 2,
             decoration: const InputDecoration(
               labelText: 'Observações',
               border: OutlineInputBorder(),
-              prefixIcon: Icon(Icons.edit_note),
+              isDense: true,
             ),
           ),
 
           const SizedBox(height: 16),
 
-          // 3. NOVA SEÇÃO DE FOTOS
+          // 3. ÁREA DE FOTOS (Horizontal List)
           SizedBox(
-            height: 90, // Altura fixa para o carrossel
+            height: 90, 
             child: ListView(
               scrollDirection: Axis.horizontal,
               children: [
-                // A. Lista de fotos existentes
+                // A. Fotos Existentes
                 ...widget.item.photos.map((url) {
                   return Padding(
                     padding: const EdgeInsets.only(right: 8.0),
                     child: Stack(
                       children: [
-                        // A imagem
+                        // Imagem
                         ClipRRect(
                           borderRadius: BorderRadius.circular(8),
                           child: CachedNetworkImage(
                             imageUrl: url,
-                            width: 90,
-                            height: 90,
+                            width: 80,
+                            height: 80,
                             fit: BoxFit.cover,
                             placeholder: (context, url) => Container(
-                              color: Colors.grey[200],
-                              child: const Center(child: Icon(Icons.image, color: Colors.grey)),
+                              width: 80, height: 80, color: Colors.grey[200],
+                              child: const Icon(Icons.image, color: Colors.grey),
                             ),
                             errorWidget: (context, url, error) => const Icon(Icons.error),
                           ),
                         ),
-                        // O botão de deletar (X)
+                        // Botão Remover (X)
                         Positioned(
                           top: 2,
                           right: 2,
@@ -239,11 +223,11 @@ class _InspectionItemCardState extends ConsumerState<InspectionItemCard> {
                   );
                 }),
 
-                // B. Loading Indicator (se estiver subindo foto neste item)
+                // B. Loading Indicator (Placeholder enquanto sobe)
                 if (_isUploading)
                   Container(
-                    width: 90,
-                    height: 90,
+                    width: 80,
+                    height: 80,
                     margin: const EdgeInsets.only(right: 8),
                     decoration: BoxDecoration(
                       color: Colors.grey[100],
@@ -254,17 +238,17 @@ class _InspectionItemCardState extends ConsumerState<InspectionItemCard> {
                     ),
                   ),
 
-                // C. Botão de Adicionar
+                // C. Botão Adicionar Foto
                 InkWell(
                   onTap: _isUploading ? null : _showSourcePicker,
                   borderRadius: BorderRadius.circular(8),
                   child: Container(
-                    width: 90,
-                    height: 90,
+                    width: 80,
+                    height: 80,
                     decoration: BoxDecoration(
                       color: Colors.grey[200],
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.grey[400]!, style: BorderStyle.solid),
+                      border: Border.all(color: Colors.grey[400]!),
                     ),
                     child: const Icon(Icons.add_a_photo, color: Colors.grey, size: 30),
                   ),

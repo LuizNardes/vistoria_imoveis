@@ -1,5 +1,4 @@
 import 'dart:typed_data';
-import 'package:flutter/services.dart' show rootBundle;
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
@@ -8,7 +7,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 // Imports do Domínio
 import '../../inspections/domain/inspection.dart';
-import '../../inspection_details/domain/inspection_details_model.dart';
+import '../../inspection_details/domain/inspection_details_models.dart';
 
 part 'pdf_generator_service.g.dart';
 

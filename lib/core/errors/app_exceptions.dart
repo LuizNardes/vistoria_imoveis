@@ -1,9 +1,6 @@
-class ImageException implements Exception {
+class ImageFailure implements Exception {
   final String message;
-  final bool isPermissionError;
-
-  ImageException(this.message, {this.isPermissionError = false});
-
+  ImageFailure(this.message);
   @override
   String toString() => message;
 }

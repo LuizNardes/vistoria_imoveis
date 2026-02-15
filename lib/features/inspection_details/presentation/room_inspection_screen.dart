@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+// Imports corretos
 import 'room_inspection_controller.dart';
 import 'widgets/inspection_item_card.dart';
 
 class RoomInspectionScreen extends ConsumerStatefulWidget {
   final String inspectionId;
   final String roomId;
+  final String? roomName; // Adicionado para receber o nome (ex: "Cozinha")
 
   const RoomInspectionScreen({
     super.key,
     required this.inspectionId,
     required this.roomId,
+    this.roomName,
   });
 
   @override
@@ -21,44 +25,83 @@ class _RoomInspectionScreenState extends ConsumerState<RoomInspectionScreen> {
   @override
   void initState() {
     super.initState();
-    // Dispara o seed "fire and forget". 
-    // Usamos addPostFrameCallback para evitar erros de build se o provider tentar atualizar algo síncrono.
+    
+    // Dispara a criação dos itens padrão baseada no nome do cômodo
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Idealmente passaríamos o Nome do Cômodo vindo da rota ou buscado no provider,
-      // aqui vou assumir um valor genérico ou que você ajuste a rota para passar 'roomName'
-      // Para simplificar, vou buscar o nome dentro do controller se necessário, 
-      // mas aqui vou mandar "Cômodo" genérico ou passar via argumento extra se você tiver.
-      // Assumindo que você ajustará o router para passar 'roomName' ou buscará no repo.
-      
-      // *Correção Rápida:* Vamos apenas chamar o seed. O controller decide o nome ou busca.
-      // Para este exemplo, passei "Cômodo Genérico" mas recomendo passar o nome real via argumento da rota.
       ref.read(roomInspectionControllerProvider.notifier).seedItems(
             widget.inspectionId,
             widget.roomId,
-            "Cômodo", // TODO: Receber via construtor para seedar corretamente (ex: Cozinha)
+            widget.roomName ?? 'Cômodo', // Usa o nome real aqui!
           );
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final itemsAsync = ref.watch(roomItemsProvider(widget.inspectionId, widget.roomId));
+
+    ref.listen(roomInspectionControllerProvider, (_, state) {
+      if (state.hasError) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erro ao criar itens: ${state.error}'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
+            action: SnackBarAction(label: 'Detalhes', onPressed: () {
+              print(state.error); // Veja no terminal
+              print(state.stackTrace);
+            }),
+          ),
+        );
+      }
+    });
+
+    // Ouve a lista de itens do banco
+    final itemsStream = ref.watch(roomItemsProvider(widget.inspectionId, widget.roomId));
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Checklist'),
+        // Mostra o nome do cômodo no topo (ex: "Cozinha")
+        title: Text(widget.roomName ?? 'Itens do Cômodo'),
       ),
-      body: itemsAsync.when(
+      body: itemsStream.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, stack) => Center(child: Text('Erro: $err')),
         data: (items) {
+          // SE A LISTA ESTIVER VAZIA:
           if (items.isEmpty) {
-            // Estado de loading do Seed ou realmente vazio
-            return const Center(child: CircularProgressIndicator.adaptive());
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(32.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.playlist_add_check, size: 60, color: Colors.grey),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'O checklist está vazio.',
+                      style: TextStyle(fontSize: 16, color: Colors.grey),
+                    ),
+                    const SizedBox(height: 24),
+                    // BOTÃO DE RESGATE
+                    FilledButton.icon(
+                      onPressed: () {
+                        ref.read(roomInspectionControllerProvider.notifier).seedItems(
+                              widget.inspectionId,
+                              widget.roomId,
+                              widget.roomName ?? 'Cômodo',
+                            );
+                      },
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Gerar Itens Padrão'),
+                    ),
+                  ],
+                ),
+              ),
+            );
           }
 
           return ListView.builder(
-            padding: const EdgeInsets.only(bottom: 80), // Espaço para FAB se tiver
+            padding: const EdgeInsets.only(bottom: 80),
             itemCount: items.length,
             itemBuilder: (context, index) {
               final item = items[index];

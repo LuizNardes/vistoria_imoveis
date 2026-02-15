@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:vistoria_imoveis/features/inspection_details/domain/inspection_details_models.dart';
 
 // Imports das telas
 import '../../features/auth/data/auth_repository.dart';
@@ -80,6 +81,48 @@ GoRouter router(RouterRef ref) {
           final inspectionId = state.pathParameters['inspectionId']!;
           return ReportPreviewScreen(inspectionId: inspectionId);
         },
+      ),
+      GoRoute(
+        path: '/inspection/:inspectionId',
+        builder: (context, state) {
+          // Extrai o ID da URL
+          final inspectionId = state.pathParameters['inspectionId']!;
+          
+          return InspectionDetailsScreen(
+            inspectionId: inspectionId,
+          );
+        },
+        // (Opcional) Aqui dentro colocaremos a sub-rota dos itens na próxima fase
+        // routes: [ ... ] 
+      ),
+      GoRoute(
+        path: '/inspection/:inspectionId',
+        builder: (context, state) {
+          final inspectionId = state.pathParameters['inspectionId']!;
+          return InspectionDetailsScreen(inspectionId: inspectionId);
+        },
+        // --- ADICIONE ESTE BLOCO 'routes' ---
+        routes: [
+          GoRoute(
+            // Sub-rota: o path final será /inspection/123/room/456
+            path: 'room/:roomId', 
+            builder: (context, state) {
+              final inspectionId = state.pathParameters['inspectionId']!;
+              final roomId = state.pathParameters['roomId']!;
+              
+              // Pegamos o objeto 'room' se ele tiver sido passado via 'extra'
+              // Isso permite passar o nome do cômodo para o título
+              final roomData = state.extra as InspectionRoom?; 
+
+              return RoomInspectionScreen(
+                inspectionId: inspectionId,
+                roomId: roomId,
+                roomName: roomData?.name,
+              );
+            },
+          ),
+        ],
+        // ------------------------------------
       ),
     ],
 

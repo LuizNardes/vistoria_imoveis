@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'inspection_details_controller.dart';
-import '../domain/inspection_details_model.dart';
+import '../domain/inspection_details_models.dart';
 
 class InspectionDetailsScreen extends ConsumerWidget {
   final String inspectionId;
@@ -14,18 +14,14 @@ class InspectionDetailsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Ouve o Stream de cômodos em tempo real
     final roomsAsync = ref.watch(inspectionRoomsProvider(inspectionId));
 
-    ref.listen(inspectionDetailsControllerProvider, (previous, next) {
-      if (next.hasError) {
+    // Ouve o estado do controller para erros de adição (SnackBar)
+    ref.listen(inspectionDetailsControllerProvider, (_, state) {
+      if (state.hasError) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro: ${next.error}'), backgroundColor: Colors.red),
-        );
-      } else if (!next.isLoading && !next.hasError && previous?.isLoading == true) {
-        // Se parou de carregar e não tem erro, fechamos o dialog
-        Navigator.of(context).pop(); 
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Cômodo adicionado!')),
+          SnackBar(content: Text('Erro ao adicionar cômodo: ${state.error}')),
         );
       }
     });
@@ -33,15 +29,7 @@ class InspectionDetailsScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Cômodos da Vistoria'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.picture_as_pdf),
-            tooltip: 'Gerar Relatório',
-            onPressed: () {
-              context.push('/report-preview/$inspectionId');
-            },
-          ),
-        ],
+        centerTitle: true,
       ),
       body: roomsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -50,26 +38,19 @@ class InspectionDetailsScreen extends ConsumerWidget {
           if (rooms.isEmpty) {
             return const Center(
               child: Text(
-                'Nenhum cômodo adicionado.\nToque em "+" para começar.',
+                'Nenhum cômodo cadastrado.\nToque no + para começar.',
                 textAlign: TextAlign.center,
                 style: TextStyle(color: Colors.grey),
               ),
             );
           }
 
-          return ListView.separated(
+          return ListView.builder(
             padding: const EdgeInsets.all(16),
             itemCount: rooms.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 8),
             itemBuilder: (context, index) {
               final room = rooms[index];
-              return _RoomCard(
-                room: room, 
-                onTap: () {
-                  // Navegação para os itens do cômodo (Criaremos na Fase 4)
-                  context.push('/inspection/$inspectionId/room/${room.id}');
-                },
-              );
+              return _RoomCard(inspectionId: inspectionId, room: room);
             },
           );
         },
@@ -86,69 +67,60 @@ class InspectionDetailsScreen extends ConsumerWidget {
 
     showDialog(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Novo Cômodo'),
-          content: TextField(
-            controller: nameController,
-            decoration: const InputDecoration(
-              hintText: 'Ex: Cozinha, Banheiro Social',
-              border: OutlineInputBorder(),
-            ),
-            textCapitalization: TextCapitalization.sentences,
-            autofocus: true,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Novo Cômodo'),
+        content: TextField(
+          controller: nameController,
+          decoration: const InputDecoration(
+            hintText: 'Ex: Cozinha, Banheiro Suite...',
+            labelText: 'Nome do Cômodo',
+            border: OutlineInputBorder(),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancelar'),
-            ),
-            // Usamos Consumer aqui para o botão reagir ao loading do controller
-            Consumer(
-              builder: (context, ref, child) {
-                final state = ref.watch(inspectionDetailsControllerProvider);
-                return FilledButton(
-                  onPressed: state.isLoading
-                      ? null
-                      : () {
-                          if (nameController.text.trim().isNotEmpty) {
-                            ref
-                                .read(inspectionDetailsControllerProvider.notifier)
-                                .addRoom(inspectionId, nameController.text.trim());
-                          }
-                        },
-                  child: state.isLoading
-                      ? const SizedBox(
-                          width: 20, 
-                          height: 20, 
-                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)
-                        )
-                      : const Text('Adicionar'),
-                );
-              },
-            ),
-          ],
-        );
-      },
+          textCapitalization: TextCapitalization.sentences,
+          autofocus: true,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () {
+              if (nameController.text.trim().isNotEmpty) {
+                // Chama o controller para adicionar
+                ref.read(inspectionDetailsControllerProvider.notifier)
+                   .addRoom(inspectionId, nameController.text.trim());
+                Navigator.pop(ctx);
+              }
+            },
+            child: const Text('Adicionar'),
+          ),
+        ],
+      ),
     );
   }
 }
 
 class _RoomCard extends StatelessWidget {
+  final String inspectionId;
   final InspectionRoom room;
-  final VoidCallback onTap;
 
-  const _RoomCard({required this.room, required this.onTap});
+  const _RoomCard({required this.inspectionId, required this.room});
 
   @override
   Widget build(BuildContext context) {
     return Card(
       elevation: 2,
+      margin: const EdgeInsets.only(bottom: 12),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListTile(
-        onTap: onTap,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         leading: CircleAvatar(
           backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-          child: Text(room.name[0].toUpperCase()),
+          child: Icon(
+            Icons.meeting_room,
+            color: Theme.of(context).colorScheme.onPrimaryContainer,
+          ),
         ),
         title: Text(
           room.name,
@@ -156,8 +128,16 @@ class _RoomCard extends StatelessWidget {
         ),
         subtitle: Text(
           '${room.completedItems} de ${room.totalItems} itens verificados',
+          style: TextStyle(color: Colors.grey[600]),
         ),
         trailing: const Icon(Icons.chevron_right),
+        onTap: () {
+          // Navegação para os itens do cômodo (Rota aninhada ou direta)
+          context.push(
+            '/inspection/$inspectionId/room/${room.id}',
+            extra: room, // Passamos o objeto inteiro para pegar o nome na próxima tela
+          );
+        },
       ),
     );
   }

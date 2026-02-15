@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import '../../../core/errors/app_exceptions.dart';
 
 part 'storage_repository.g.dart';
 
@@ -14,38 +15,39 @@ class StorageRepository {
 
   StorageRepository(this._storage);
 
-  /// Faz o upload e retorna a URL pública para salvar no Firestore
+  /// Upload de arquivo e retorno da URL pública
+  /// [path] ex: inspections/123/items/abc/uuid.jpg
   Future<String> uploadImage({
     required File file,
-    required String path, // ex: inspections/123/items/abc/foto.jpg
+    required String path,
   }) async {
     try {
-      // 1. Referência ao caminho no bucket
+      // 1. Cria a referência no bucket
       final ref = _storage.ref().child(path);
 
-      // 2. Configura metadata (Opcional, mas bom para cache no browser/CDN)
+      // 2. Configura metadados (importante para cache do navegador/app)
       final metadata = SettableMetadata(
         contentType: 'image/jpeg',
-        customMetadata: {'compressed': 'true'},
+        customMetadata: {'optimized': 'true'},
       );
 
-      // 3. Upload Task
+      // 3. Executa o upload
       final uploadTask = await ref.putFile(file, metadata);
 
-      // 4. Aguarda finalizar e pega a URL
-      // Se falhar, o 'await' lança a exceção do Firebase
+      // 4. Obtém a URL de download
       final downloadUrl = await uploadTask.ref.getDownloadURL();
 
       return downloadUrl;
-
     } on FirebaseException catch (e) {
-      // Tratamento específico do Firebase
+      // Tratamento específico de erros do Firebase
       if (e.code == 'permission-denied') {
-        throw Exception('Permissão negada no servidor. Verifique as Security Rules.');
+        throw ImageFailure('Sem permissão para enviar imagens. Contate o suporte.');
+      } else if (e.code == 'retry-limit-exceeded') {
+        throw ImageFailure('Conexão instável. Tente novamente.');
       }
-      throw Exception('Erro no upload: ${e.message}');
+      throw ImageFailure('Erro no upload: ${e.message}');
     } catch (e) {
-      throw Exception('Erro desconhecido no upload: $e');
+      throw ImageFailure('Erro inesperado ao salvar imagem.');
     }
   }
 }

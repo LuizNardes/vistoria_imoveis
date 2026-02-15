@@ -45,14 +45,14 @@ class CustomErrorScreen extends StatelessWidget {
               ),
 
               // Detalhes técnicos (Só em Debug)
-              if (false) // Mude para kDebugMode se quiser ver o erro em dev
+              /*if (false) // Mude para kDebugMode se quiser ver o erro em dev
                 Padding(
                   padding: const EdgeInsets.only(top: 20),
                   child: Text(
                     details.exception.toString(),
                     style: const TextStyle(fontSize: 10, color: Colors.grey),
                   ),
-                ),
+                ),*/
             ],
           ),
         ),

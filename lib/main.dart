@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,7 +6,6 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'firebase_options.dart';
 import 'core/router/router.dart';
 import 'core/theme/app_theme.dart';
-import 'core/services/connectivity_service.dart';
 import 'shared/widgets/offline_banner.dart';
 import 'shared/widgets/custom_error_screen.dart';
 

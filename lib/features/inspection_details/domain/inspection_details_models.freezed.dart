@@ -3,7 +3,7 @@
 // ignore_for_file: type=lint
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
-part of 'inspection_details_model.dart';
+part of 'inspection_details_models.dart';
 
 // **************************************************************************
 // FreezedGenerator
@@ -24,7 +24,10 @@ mixin _$InspectionItem {
   String get name => throw _privateConstructorUsedError;
   ItemCondition get condition => throw _privateConstructorUsedError;
   String? get notes => throw _privateConstructorUsedError;
-  List<String> get photos => throw _privateConstructorUsedError;
+  List<String> get photos =>
+      throw _privateConstructorUsedError; // --- CAMPO ADICIONADO ---
+  @TimestampConverter()
+  DateTime? get updatedAt => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -43,7 +46,8 @@ abstract class $InspectionItemCopyWith<$Res> {
       String name,
       ItemCondition condition,
       String? notes,
-      List<String> photos});
+      List<String> photos,
+      @TimestampConverter() DateTime? updatedAt});
 }
 
 /// @nodoc
@@ -64,6 +68,7 @@ class _$InspectionItemCopyWithImpl<$Res, $Val extends InspectionItem>
     Object? condition = null,
     Object? notes = freezed,
     Object? photos = null,
+    Object? updatedAt = freezed,
   }) {
     return _then(_value.copyWith(
       id: null == id
@@ -86,6 +91,10 @@ class _$InspectionItemCopyWithImpl<$Res, $Val extends InspectionItem>
           ? _value.photos
           : photos // ignore: cast_nullable_to_non_nullable
               as List<String>,
+      updatedAt: freezed == updatedAt
+          ? _value.updatedAt
+          : updatedAt // ignore: cast_nullable_to_non_nullable
+              as DateTime?,
     ) as $Val);
   }
 }
@@ -103,7 +112,8 @@ abstract class _$$InspectionItemImplCopyWith<$Res>
       String name,
       ItemCondition condition,
       String? notes,
-      List<String> photos});
+      List<String> photos,
+      @TimestampConverter() DateTime? updatedAt});
 }
 
 /// @nodoc
@@ -122,6 +132,7 @@ class __$$InspectionItemImplCopyWithImpl<$Res>
     Object? condition = null,
     Object? notes = freezed,
     Object? photos = null,
+    Object? updatedAt = freezed,
   }) {
     return _then(_$InspectionItemImpl(
       id: null == id
@@ -144,6 +155,10 @@ class __$$InspectionItemImplCopyWithImpl<$Res>
           ? _value._photos
           : photos // ignore: cast_nullable_to_non_nullable
               as List<String>,
+      updatedAt: freezed == updatedAt
+          ? _value.updatedAt
+          : updatedAt // ignore: cast_nullable_to_non_nullable
+              as DateTime?,
     ));
   }
 }
@@ -156,7 +171,8 @@ class _$InspectionItemImpl extends _InspectionItem {
       required this.name,
       this.condition = ItemCondition.ok,
       this.notes,
-      final List<String> photos = const []})
+      final List<String> photos = const [],
+      @TimestampConverter() this.updatedAt})
       : _photos = photos,
         super._();
 
@@ -181,9 +197,14 @@ class _$InspectionItemImpl extends _InspectionItem {
     return EqualUnmodifiableListView(_photos);
   }
 
+// --- CAMPO ADICIONADO ---
+  @override
+  @TimestampConverter()
+  final DateTime? updatedAt;
+
   @override
   String toString() {
-    return 'InspectionItem(id: $id, name: $name, condition: $condition, notes: $notes, photos: $photos)';
+    return 'InspectionItem(id: $id, name: $name, condition: $condition, notes: $notes, photos: $photos, updatedAt: $updatedAt)';
   }
 
   @override
@@ -196,13 +217,15 @@ class _$InspectionItemImpl extends _InspectionItem {
             (identical(other.condition, condition) ||
                 other.condition == condition) &&
             (identical(other.notes, notes) || other.notes == notes) &&
-            const DeepCollectionEquality().equals(other._photos, _photos));
+            const DeepCollectionEquality().equals(other._photos, _photos) &&
+            (identical(other.updatedAt, updatedAt) ||
+                other.updatedAt == updatedAt));
   }
 
   @JsonKey(ignore: true)
   @override
   int get hashCode => Object.hash(runtimeType, id, name, condition, notes,
-      const DeepCollectionEquality().hash(_photos));
+      const DeepCollectionEquality().hash(_photos), updatedAt);
 
   @JsonKey(ignore: true)
   @override
@@ -225,7 +248,8 @@ abstract class _InspectionItem extends InspectionItem {
       required final String name,
       final ItemCondition condition,
       final String? notes,
-      final List<String> photos}) = _$InspectionItemImpl;
+      final List<String> photos,
+      @TimestampConverter() final DateTime? updatedAt}) = _$InspectionItemImpl;
   const _InspectionItem._() : super._();
 
   factory _InspectionItem.fromJson(Map<String, dynamic> json) =
@@ -241,6 +265,9 @@ abstract class _InspectionItem extends InspectionItem {
   String? get notes;
   @override
   List<String> get photos;
+  @override // --- CAMPO ADICIONADO ---
+  @TimestampConverter()
+  DateTime? get updatedAt;
   @override
   @JsonKey(ignore: true)
   _$$InspectionItemImplCopyWith<_$InspectionItemImpl> get copyWith =>

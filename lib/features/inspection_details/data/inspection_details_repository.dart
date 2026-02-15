@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import '../domain/inspection_details_model.dart';
+import '../domain/inspection_details_models.dart';
 
 part 'inspection_details_repository.g.dart';
 
@@ -15,9 +15,9 @@ class InspectionDetailsRepository {
 
   InspectionDetailsRepository(this._firestore);
 
-  // --- HELPERS DE COLEÇÃO ---
-  
-  // Acesso à sub-coleção 'rooms' de uma vistoria
+  // --- HELPERS (Tipagem Forte) ---
+
+  /// Referência para a coleção de Cômodos
   CollectionReference<InspectionRoom> _roomsRef(String inspectionId) {
     return _firestore
         .collection('inspections')
@@ -26,90 +26,103 @@ class InspectionDetailsRepository {
         .withConverter<InspectionRoom>(
       fromFirestore: (snapshot, _) {
         final data = snapshot.data() ?? {};
-        // Injeta o ID do documento no modelo
-        data['id'] = snapshot.id; 
+        data['id'] = snapshot.id;
         return InspectionRoom.fromJson(data);
       },
-      toFirestore: (room, _) {
-        // Remove o ID para não duplicar no banco (já é a chave do doc)
+      // CORREÇÃO: Usamos 'value' dinâmico e fazemos cast para evitar o erro de subtype
+      toFirestore: (value, _) {
+        final room = value as InspectionRoom; 
         final map = room.toJson();
-        map.remove('id'); 
-        return map;
+        map.remove('id');
+        return map.cast<String, Object?>();
       },
     );
   }
 
-  // Acesso à sub-coleção 'items' de um cômodo
+  /// Referência para a coleção de Itens
   CollectionReference<InspectionItem> _itemsRef(
       String inspectionId, String roomId) {
-    return _roomsRef(inspectionId)
-        .doc(roomId)
-        .collection('items')
+    return _firestore
+        .collection('inspections/$inspectionId/rooms/$roomId/items')
         .withConverter<InspectionItem>(
       fromFirestore: (snapshot, _) {
         final data = snapshot.data() ?? {};
         data['id'] = snapshot.id;
         return InspectionItem.fromJson(data);
       },
-      toFirestore: (item, _) {
+      // CORREÇÃO: Cast explícito aqui também
+      toFirestore: (value, _) {
+        final item = value as InspectionItem;
         final map = item.toJson();
         map.remove('id');
-        return map;
+        
+        // Se estiver null (criação), define o timestamp
+        if (map['updatedAt'] == null) {
+          map['updatedAt'] = FieldValue.serverTimestamp();
+        }
+        
+        return map.cast<String, Object?>();
       },
     );
   }
 
-  // --- MÉTODOS ---
+  // --- MÉTODOS PÚBLICOS ---
 
-  // 1. Monitorar Cômodos
+  /// 1. Monitorar lista de Cômodos
   Stream<List<InspectionRoom>> watchRooms(String inspectionId) {
     return _roomsRef(inspectionId)
-        .orderBy('name') // Ordenação alfabética padrão
+        .orderBy('name')
         .snapshots()
-        .map((s) => s.docs.map((d) => d.data()).toList());
+        .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList());
   }
 
-  // 2. Adicionar Cômodo (E inicializar itens padrão se necessário)
-  Future<void> addRoom(String inspectionId, String name) async {
-    final roomRef = _roomsRef(inspectionId).doc(); // Gera ID automático
-    
-    // Cria o cômodo zerado
-    final newRoom = InspectionRoom(
-      id: roomRef.id,
-      name: name,
-      totalItems: 0,
-      completedItems: 0,
-    );
-
-    // Dica de Engenharia: Em um app real, aqui você provavelmente
-    // adicionaria uma lista de itens padrão (ex: se for "Cozinha", adiciona "Pia", "Fogão")
-    // usando um Batch Write. Por enquanto, seguiremos o requisito simples.
-    
-    await roomRef.set(newRoom);
+  /// 2. Adicionar um Cômodo
+  Future<String> addRoom(String inspectionId, InspectionRoom room) async {
+    final docRef = await _roomsRef(inspectionId).add(room);
+    return docRef.id;
   }
 
-  // 3. Monitorar Itens de um Cômodo
-  Stream<List<InspectionItem>> watchItems(String inspectionId, String roomId) {
+  /// 3. Monitorar itens de um cômodo específico
+  Stream<List<InspectionItem>> watchItems(
+      String inspectionId, String roomId) {
     return _itemsRef(inspectionId, roomId)
         .orderBy('name')
         .snapshots()
-        .map((s) => s.docs.map((d) => d.data()).toList());
+        .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList());
   }
 
-  // 4. Atualizar Item (Condição, Notas, Fotos)
-  Future<void> addItem(
-    String inspectionId, String roomId, InspectionItem item) async {
-    final itemRef = _itemsRef(inspectionId, roomId).doc(); // Gera ID automático
+  /// 4. Adicionar itens em Lote (Batch Write)
+  Future<void> addItems(
+      String inspectionId, String roomId, List<InspectionItem> items) async {
+    final batch = _firestore.batch();
     
-    // Cria o item com ID gerado automaticamente
-    final newItem = item.copyWith(id: itemRef.id);
-    
-    await itemRef.set(newItem);
+    // CORREÇÃO CRÍTICA: 
+    // Usamos uma referência "crua" (sem converter) para o Batch.
+    // Isso permite passar um Map<String, dynamic> diretamente, evitando
+    // conflitos de tipo e permitindo o uso de FieldValue.serverTimestamp().
+    final rawCollectionRef = _firestore.collection('inspections/$inspectionId/rooms/$roomId/items');
+
+    for (final item in items) {
+      final docRef = rawCollectionRef.doc(); // Gera ID
+      
+      final map = item.toJson();
+      map.remove('id');
+      map['updatedAt'] = FieldValue.serverTimestamp(); // Funciona perfeitamente no Map cru
+
+      batch.set(docRef, map);
+    }
+
+    await batch.commit();
   }
 
+  /// 5. Atualizar um item
   Future<void> updateItem(
-    String inspectionId, String roomId, InspectionItem item) async {
-    final itemRef = _itemsRef(inspectionId, roomId).doc(item.id);
-    await itemRef.set(item);
+      String inspectionId, String roomId, InspectionItem item) async {
+    final itemToUpdate = item.copyWith(updatedAt: DateTime.now());
+    
+    // Aqui usamos a referência tipada pois estamos passando o objeto 'itemToUpdate'
+    await _itemsRef(inspectionId, roomId)
+        .doc(item.id)
+        .set(itemToUpdate, SetOptions(merge: true));
   }
 }

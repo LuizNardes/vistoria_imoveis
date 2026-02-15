@@ -174,7 +174,7 @@ class _RoomItemsProviderElement
 }
 
 String _$roomInspectionControllerHash() =>
-    r'2a18bcb3a51656098e3224a116cc50f4d64c0ac2';
+    r'd5eaa4e478007e43041acc575750b2d3e89fb5c9';
 
 /// See also [RoomInspectionController].
 @ProviderFor(RoomInspectionController)

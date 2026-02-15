@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'inspection_details_model.dart';
+part of 'inspection_details_models.dart';
 
 // **************************************************************************
 // JsonSerializableGenerator
@@ -18,6 +18,7 @@ _$InspectionItemImpl _$$InspectionItemImplFromJson(Map<String, dynamic> json) =>
               ?.map((e) => e as String)
               .toList() ??
           const [],
+      updatedAt: const TimestampConverter().fromJson(json['updatedAt']),
     );
 
 Map<String, dynamic> _$$InspectionItemImplToJson(
@@ -28,6 +29,7 @@ Map<String, dynamic> _$$InspectionItemImplToJson(
       'condition': _$ItemConditionEnumMap[instance.condition]!,
       'notes': instance.notes,
       'photos': instance.photos,
+      'updatedAt': const TimestampConverter().toJson(instance.updatedAt),
     };
 
 const _$ItemConditionEnumMap = {
