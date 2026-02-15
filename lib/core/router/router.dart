@@ -124,6 +124,13 @@ GoRouter router(RouterRef ref) {
         ],
         // ------------------------------------
       ),
+      GoRoute(
+        path: '/report-preview/:inspectionId',
+        builder: (context, state) {
+          final inspectionId = state.pathParameters['inspectionId']!;
+          return ReportPreviewScreen(inspectionId: inspectionId);
+        },
+      ),
     ],
 
     // Lógica de Guarda (Redirecionamento)

@@ -2,12 +2,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 // Imports dos Models
-import '../../inspections/domain/inspection.dart';
 import '../../inspection_details/domain/inspection_details_models.dart';
+import '../../inspections/domain/inspection.dart'; 
 
 part 'report_repository.g.dart';
 
-/// Classe DTO (Data Transfer Object) para agrupar tudo
+// --- DATA CLASS (DTO) ---
 class FullInspectionData {
   final Inspection inspection;
   final List<InspectionRoom> rooms;
@@ -20,61 +20,87 @@ class FullInspectionData {
   });
 }
 
+// --- PROVIDER ---
 @riverpod
-Future<FullInspectionData> fullInspection(FullInspectionRef ref, String inspectionId) async {
-  final firestore = FirebaseFirestore.instance;
+ReportRepository reportRepository(ReportRepositoryRef ref) {
+  return ReportRepository(FirebaseFirestore.instance);
+}
 
-  // 1. Buscamos a Inspeção e os Cômodos em paralelo (Primeiro nível)
-  // Nota: Precisamos replicar os converters ou instanciar manualmente para manter a tipagem.
-  // Para simplificar neste agregador, faremos a conversão manual rápida baseada nos models.
-  
-  final inspectionFuture = firestore.collection('inspections').doc(inspectionId).get();
-  final roomsFuture = firestore.collection('inspections').doc(inspectionId).collection('rooms').orderBy('name').get();
+// --- REPOSITORY ---
+class ReportRepository {
+  final FirebaseFirestore _firestore;
 
-  final results = await Future.wait([inspectionFuture, roomsFuture]);
+  ReportRepository(this._firestore);
 
-  final inspectionSnap = results[0] as DocumentSnapshot<Map<String, dynamic>>;
-  final roomsSnap = results[1] as QuerySnapshot<Map<String, dynamic>>;
+  Future<FullInspectionData> fetchFullInspection(String inspectionId) async {
+    // 1. Buscar dados da Vistoria (Cabeçalho)
+    final inspectionDoc = await _firestore.collection('inspections').doc(inspectionId).get();
+    
+    if (!inspectionDoc.exists) {
+      throw Exception("Vistoria não encontrada no banco de dados.");
+    }
+    
+    // Usa a fábrica blindada que criamos acima
+    final inspection = Inspection.fromFirestore(inspectionDoc); 
 
-  if (!inspectionSnap.exists) {
-    throw Exception("Vistoria não encontrada");
-  }
-
-  // Converter Inspeção
-  // Adiciona ID manualmente pois o fromJson espera
-  final inspection = Inspection.fromJson({...inspectionSnap.data()!, 'id': inspectionSnap.id});
-
-  // Converter Cômodos
-  final rooms = roomsSnap.docs.map((doc) {
-    return InspectionRoom.fromJson({...doc.data(), 'id': doc.id});
-  }).toList();
-
-  // 2. Buscamos os Itens de TODOS os cômodos em paralelo (Segundo nível)
-  // Criamos uma lista de Futures, onde cada Future busca os itens de um quarto
-  final itemsFutures = rooms.map((room) async {
-    final itemsSnap = await firestore
+    // 2. Buscar TODOS os Cômodos
+    final roomsSnapshot = await _firestore
         .collection('inspections')
         .doc(inspectionId)
         .collection('rooms')
-        .doc(room.id)
-        .collection('items')
         .orderBy('name')
         .get();
 
-    final items = itemsSnap.docs.map((doc) {
-      return InspectionItem.fromJson({...doc.data(), 'id': doc.id});
+    final rooms = roomsSnapshot.docs.map((doc) {
+      final data = doc.data();
+      data['id'] = doc.id;
+      // Garante que o nome do cômodo nunca seja nulo
+      if (data['name'] == null) data['name'] = 'Cômodo sem nome';
+      return InspectionRoom.fromJson(data);
     }).toList();
 
-    return MapEntry(room.id, items);
-  });
+    // 3. Buscar Itens
+    final itemsFutures = rooms.map((room) async {
+      final itemsSnapshot = await _firestore
+          .collection('inspections')
+          .doc(inspectionId)
+          .collection('rooms')
+          .doc(room.id)
+          .collection('items')
+          .orderBy('name')
+          .get();
 
-  // Aguarda todos os downloads de itens finalizarem
-  final itemsEntries = await Future.wait(itemsFutures);
-  final itemsByRoom = Map.fromEntries(itemsEntries);
+      final items = itemsSnapshot.docs.map((doc) {
+        final data = doc.data();
+        data['id'] = doc.id;
+        
+        // --- PROTEÇÃO EXTRA PARA OS ITENS ---
+        // Se algum campo obrigatório do item estiver null no banco, consertamos aqui
+        if (data['name'] == null) data['name'] = 'Item sem nome';
+        
+        // Se notes for null, o fromJson do InspectionItem já deve aceitar (String?),
+        // mas se a condition vier errada, pode quebrar.
+        // O enum @JsonEnum geralmente cuida disso, mas se der erro no item, avise.
+        
+        return InspectionItem.fromJson(data);
+      }).toList();
 
-  return FullInspectionData(
-    inspection: inspection,
-    rooms: rooms,
-    itemsByRoom: itemsByRoom,
-  );
+      return MapEntry(room.id, items);
+    });
+
+    final itemsEntries = await Future.wait(itemsFutures);
+    final itemsByRoom = Map.fromEntries(itemsEntries);
+
+    return FullInspectionData(
+      inspection: inspection,
+      rooms: rooms,
+      itemsByRoom: itemsByRoom,
+    );
+  }
+}
+
+// --- CONTROLLER/PROVIDER DE DADOS ---
+@riverpod
+Future<FullInspectionData> fullInspection(FullInspectionRef ref, String inspectionId) {
+  return ref.watch(reportRepositoryProvider).fetchFullInspection(inspectionId);
 }

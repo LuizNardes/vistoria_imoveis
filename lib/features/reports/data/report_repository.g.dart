@@ -6,7 +6,22 @@ part of 'report_repository.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$fullInspectionHash() => r'd256b23e5b5389e77f85dd30d1ca83be29be3fe5';
+String _$reportRepositoryHash() => r'19ffa9cdbd22a361fea19766073bfddca571aa4d';
+
+/// See also [reportRepository].
+@ProviderFor(reportRepository)
+final reportRepositoryProvider = AutoDisposeProvider<ReportRepository>.internal(
+  reportRepository,
+  name: r'reportRepositoryProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$reportRepositoryHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+typedef ReportRepositoryRef = AutoDisposeProviderRef<ReportRepository>;
+String _$fullInspectionHash() => r'a5339ed80bd2326d4d1162ea6af37d73365c945d';
 
 /// Copied from Dart SDK
 class _SystemHash {

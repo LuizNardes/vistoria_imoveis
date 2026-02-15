@@ -10,19 +10,16 @@ import '../domain/pdf_generator_service.dart';
 class ReportPreviewScreen extends ConsumerWidget {
   final String inspectionId;
 
-  const ReportPreviewScreen({
-    super.key,
-    required this.inspectionId,
-  });
+  const ReportPreviewScreen({super.key, required this.inspectionId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Observa o provider que carrega todos os dados
+    // 1. Busca os dados agregados
     final fullDataAsync = ref.watch(fullInspectionProvider(inspectionId));
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Visualizar Relatório'),
+        title: const Text('Pré-visualizar Relatório'),
       ),
       body: fullDataAsync.when(
         loading: () => const Center(
@@ -31,37 +28,28 @@ class ReportPreviewScreen extends ConsumerWidget {
             children: [
               CircularProgressIndicator(),
               SizedBox(height: 16),
-              Text("Compilando dados e baixando fotos..."),
+              Text('Coletando dados e baixando fotos...'),
             ],
           ),
         ),
-        error: (error, stack) => Center(
-          child: Text('Erro ao gerar relatório: $error'),
+        error: (err, stack) => Center(
+          child: Text('Erro ao gerar relatório: $err'),
         ),
         data: (data) {
-          // Formata o nome do arquivo: vistoria_2023-10-25_ClienteNome.pdf
-          final dateStr = DateFormat('yyyy-MM-dd').format(data.inspection.date);
-          final safeClientName = data.inspection.clientName.replaceAll(RegExp(r'[^\w\s]+'), '');
-          final fileName = 'vistoria_${dateStr}_$safeClientName.pdf';
-
+          // 2. Exibe o Preview do PDF
           return PdfPreview(
-            // Configurações da UI de Preview
-            maxPageWidth: 700,
+            // Nome do arquivo ao salvar/compartilhar
+            pdfFileName: 'vistoria_${DateFormat('yyyyMMdd').format(data.inspection.date)}.pdf',
             canChangeOrientation: false,
             canDebug: false,
-            allowPrinting: true,
-            allowSharing: true,
             
-            // Nome do arquivo sugerido ao compartilhar/salvar
-            pdfFileName: fileName,
-
-            // Função que gera os bytes (chama nosso Service)
+            // Função que gera os bytes do PDF
             build: (format) {
               return ref.read(pdfGeneratorServiceProvider).generateInspectionReport(
-                    data.inspection,
-                    data.rooms,
-                    data.itemsByRoom,
-                  );
+                inspection: data.inspection,
+                rooms: data.rooms,
+                itemsByRoom: data.itemsByRoom,
+              );
             },
           );
         },

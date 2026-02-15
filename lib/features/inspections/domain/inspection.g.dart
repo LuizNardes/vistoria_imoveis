@@ -12,14 +12,13 @@ _$InspectionImpl _$$InspectionImplFromJson(Map<String, dynamic> json) =>
       userId: json['userId'] as String,
       clientName: json['clientName'] as String,
       address: json['address'] as String,
-      date:
-          const FirestoreTimestampConverter().fromJson(json['date'] as Object),
+      date: const FirestoreTimestampConverter().fromJson(json['date']),
       status: $enumDecodeNullable(_$InspectionStatusEnumMap, json['status']) ??
           InspectionStatus.scheduled,
-      createdAt: const FirestoreTimestampConverter()
-          .fromJson(json['createdAt'] as Object),
-      updatedAt: const FirestoreTimestampConverter()
-          .fromJson(json['updatedAt'] as Object),
+      createdAt:
+          const FirestoreTimestampConverter().fromJson(json['createdAt']),
+      updatedAt:
+          const FirestoreTimestampConverter().fromJson(json['updatedAt']),
     );
 
 Map<String, dynamic> _$$InspectionImplToJson(_$InspectionImpl instance) =>

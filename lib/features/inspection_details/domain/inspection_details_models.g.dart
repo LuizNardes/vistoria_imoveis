@@ -36,6 +36,7 @@ const _$ItemConditionEnumMap = {
   ItemCondition.ok: 'ok',
   ItemCondition.damaged: 'damaged',
   ItemCondition.repairNeeded: 'repair_needed',
+  ItemCondition.dirty: 'dirty',
   ItemCondition.notApplicable: 'not_applicable',
 };
 

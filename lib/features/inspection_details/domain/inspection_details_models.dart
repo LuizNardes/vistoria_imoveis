@@ -31,6 +31,8 @@ enum ItemCondition {
   damaged('damaged'),
   @JsonValue('repair_needed')
   repairNeeded('repair_needed'),
+  @JsonValue('dirty')
+  dirty('dirty'),
   @JsonValue('not_applicable')
   notApplicable('not_applicable');
 
