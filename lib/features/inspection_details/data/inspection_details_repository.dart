@@ -31,7 +31,7 @@ class InspectionDetailsRepository {
       },
       // CORREÇÃO: Usamos 'value' dinâmico e fazemos cast para evitar o erro de subtype
       toFirestore: (value, _) {
-        final room = value as InspectionRoom; 
+        final room = value; 
         final map = room.toJson();
         map.remove('id');
         return map.cast<String, Object?>();
@@ -52,7 +52,7 @@ class InspectionDetailsRepository {
       },
       // CORREÇÃO: Cast explícito aqui também
       toFirestore: (value, _) {
-        final item = value as InspectionItem;
+        final item = value;
         final map = item.toJson();
         map.remove('id');
         
@@ -95,11 +95,7 @@ class InspectionDetailsRepository {
   Future<void> addItems(
       String inspectionId, String roomId, List<InspectionItem> items) async {
     final batch = _firestore.batch();
-    
-    // CORREÇÃO CRÍTICA: 
-    // Usamos uma referência "crua" (sem converter) para o Batch.
-    // Isso permite passar um Map<String, dynamic> diretamente, evitando
-    // conflitos de tipo e permitindo o uso de FieldValue.serverTimestamp().
+
     final rawCollectionRef = _firestore.collection('inspections/$inspectionId/rooms/$roomId/items');
 
     for (final item in items) {
@@ -119,10 +115,47 @@ class InspectionDetailsRepository {
   Future<void> updateItem(
       String inspectionId, String roomId, InspectionItem item) async {
     final itemToUpdate = item.copyWith(updatedAt: DateTime.now());
-    
-    // Aqui usamos a referência tipada pois estamos passando o objeto 'itemToUpdate'
+
     await _itemsRef(inspectionId, roomId)
         .doc(item.id)
         .set(itemToUpdate, SetOptions(merge: true));
+  }
+
+  /// 6. Deletar um cômodo e todos os seus itens (Cascading Delete)
+  Future<void> deleteRoom(String inspectionId, String roomId) async {
+    final batch = _firestore.batch();
+    
+    // 1. Busca todos os itens do cômodo para deletá-los primeiro
+    final itemsSnapshot = await _itemsRef(inspectionId, roomId).get();
+    for (var doc in itemsSnapshot.docs) {
+      batch.delete(doc.reference);
+    }
+
+    // 2. Deleta o cômodo em si
+    final roomRef = _roomsRef(inspectionId).doc(roomId);
+    batch.delete(roomRef);
+
+    // 3. Executa a deleção em lote
+    await batch.commit();
+  }
+
+  /// 7. Atualizar dados do cômodo (Usado para atualizar o contador de progresso)
+  Future<void> updateRoom(String inspectionId, InspectionRoom room) async {
+    await _roomsRef(inspectionId)
+        .doc(room.id)
+        .set(room, SetOptions(merge: true));
+  }
+
+  /// 8. Deletar um item específico
+  Future<void> deleteItem(String inspectionId, String roomId, String itemId) async {
+    await _itemsRef(inspectionId, roomId).doc(itemId).delete();
+  }
+
+  /// 9. Atualizar contadores do cômodo diretamente
+  Future<void> updateRoomCounters(String inspectionId, String roomId, int total, int completed) async {
+    await _firestore.doc('inspections/$inspectionId/rooms/$roomId').update({
+      'totalItems': total,
+      'completedItems': completed,
+    });
   }
 }

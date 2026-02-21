@@ -159,7 +159,7 @@ class _InspectionRoomsProviderElement
 }
 
 String _$inspectionDetailsControllerHash() =>
-    r'5f407d154720a85768c91a2adbfd76d37174ba67';
+    r'6006d023830ea7ca108ce54e4b758851eddba862';
 
 /// See also [InspectionDetailsController].
 @ProviderFor(InspectionDetailsController)

@@ -64,19 +64,15 @@ class Inspection with _$Inspection {
   factory Inspection.fromJson(Map<String, dynamic> json) =>
       _$InspectionFromJson(json);
 
-  // --- NOVA FACTORY (A SOLUÇÃO DO ERRO) ---
-  // Esta factory blinda a criação do objeto contra campos nulos no Firestore
   factory Inspection.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>? ?? {};
 
     return Inspection(
       id: doc.id,
       userId: (data['userId'] as String?) ?? '',
-      // Se vier null, usa string padrão para não quebrar o PDF
       clientName: (data['clientName'] as String?) ?? 'Cliente não informado', 
       address: (data['address'] as String?) ?? 'Endereço não informado',
-      
-      // Conversão manual segura de Timestamp
+
       date: _parseDate(data['date']),
       
       status: _parseStatus(data['status']),
@@ -85,8 +81,6 @@ class Inspection with _$Inspection {
       updatedAt: _parseDate(data['updatedAt']),
     );
   }
-
-  // --- HELPERS PRIVADOS PARA A FACTORY ---
   
   static DateTime _parseDate(dynamic value) {
     if (value is Timestamp) return value.toDate();
@@ -95,14 +89,12 @@ class Inspection with _$Inspection {
   }
 
   static InspectionStatus _parseStatus(dynamic value) {
-    // Tenta casar a string com o enum, se falhar retorna scheduled
     return InspectionStatus.values.firstWhere(
       (e) => e.toString().split('.').last == value,
       orElse: () => InspectionStatus.scheduled,
     );
   }
 
-  // Helper para criar uma inspeção nova
   factory Inspection.create({
     required String userId,
     required String clientName,

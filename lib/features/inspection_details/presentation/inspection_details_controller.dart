@@ -1,4 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:vistoria_imoveis/features/inspections/data/inspections_repository.dart';
+import 'package:vistoria_imoveis/features/inspections/domain/inspection.dart';
 import '../data/inspection_details_repository.dart';
 import '../domain/inspection_details_models.dart';
 
@@ -38,5 +40,20 @@ class InspectionDetailsController extends _$InspectionDetailsController {
       
       await repository.addRoom(inspectionId, newRoom);
     });
+  }
+
+  Future<void> updateInspectionStatus(String inspectionId, InspectionStatus status) async {
+    final repo = ref.read(inspectionsRepositoryProvider);
+    await repo.updateStatus(inspectionId, status);
+  }
+
+  Future<void> deleteRoom(String inspectionId, String roomId) async {
+    final repository = ref.read(inspectionDetailsRepositoryProvider);
+    
+    try {
+      await repository.deleteRoom(inspectionId, roomId);
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+    }
   }
 }
