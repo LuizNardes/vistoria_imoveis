@@ -12,7 +12,20 @@
           "package_name": "br.com.vistoria.vistoria_imoveis"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "340371444506-ig59uqvu6r2rulr4fku4tlk7o7uer5un.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "br.com.vistoria.vistoria_imoveis",
+            "certificate_hash": "107e68ad5ccd041bd36b3977fffe93037d27aa98"
+          }
+        },
+        {
+          "client_id": "340371444506-hiuuup26kh57pmqng1lada9bcggr07fv.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyCSognfy_f2B-_MqRLKixjVQQ0Ca3l7k7w"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "340371444506-hiuuup26kh57pmqng1lada9bcggr07fv.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "340371444506-k9sk2cgic99vmt3n56n54f13ckcr8u8h.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "br.com.vistoria.vistoriaImoveis"
+              }
+            }
+          ]
         }
       }
     }

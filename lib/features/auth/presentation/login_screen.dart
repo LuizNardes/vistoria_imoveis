@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'login_controller.dart';
+import 'auth_controller.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -62,7 +63,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   obscureText: true,
                   validator: (value) => value!.isEmpty ? 'Informe a senha' : null,
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 5),
+                FilledButton.icon(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: Colors.black87,
+                    minimumSize: const Size.fromHeight(50),
+                    side: const BorderSide(color: Colors.grey),
+                  ),
+                  icon: Image.asset('assets/icon/google.png', height: 24),
+                  label: const Text('Entrar com o Google'),
+                  onPressed: () async {
+                    ref.read(authControllerProvider.notifier).loginWithGoogle();
+                  },
+                ),
+                const SizedBox(height: 15),
                 SizedBox(
                   width: double.infinity,
                   height: 48,
