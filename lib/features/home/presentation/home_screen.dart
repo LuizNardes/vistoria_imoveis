@@ -40,6 +40,7 @@ class HomeScreen extends ConsumerWidget {
           // Empty State
           if (inspections.isEmpty) {
             return const EmptyStateWidget(
+              icon: Icons.assignment,
               title: 'Nenhuma vistoria agendada',
               message: 'Comece clicando em "Nova Vistoria" abaixo.',
             );

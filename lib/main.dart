@@ -58,7 +58,6 @@ class VistoriaApp extends ConsumerWidget {
       themeMode: ThemeMode.system,
       routerConfig: router,
       builder: (context, child) {
-        // Garante que o banner flutue sobre qualquer tela do app
         return OfflineBannerWrapper(child: child ?? const SizedBox());
       },
     );

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:vistoria_imoveis/shared/widgets/empty_state_widget.dart';
 import 'inspection_details_controller.dart';
 import '../domain/inspection_details_models.dart';
 import '../../inspections/data/inspections_repository.dart';
 import '../../inspections/domain/inspection.dart';
+import '../../../shared/widgets/shimmer_loading.dart';
 
 class InspectionDetailsScreen extends ConsumerWidget {
   final String inspectionId;
@@ -58,16 +60,16 @@ class InspectionDetailsScreen extends ConsumerWidget {
         ],
       ),
       body: roomsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const ListLoadingSkeleton(),
         error: (err, stack) => Center(child: Text('Erro: $err')),
         data: (rooms) {
           if (rooms.isEmpty) {
-            return const Center(
-              child: Text(
-                'Nenhum cômodo cadastrado.\nToque no + para começar.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey),
-              ),
+            return EmptyStateWidget(
+              icon: Icons.meeting_room_outlined,
+              title: 'Nenhum cômodo',
+              message: 'Esta vistoria ainda não possui cômodos cadastrados.',
+              buttonText: 'Adicionar Cômodo',
+              onPressed: () => _showAddRoomDialog(context, ref),
             );
           }
 
