@@ -19,4 +19,19 @@ class AuthController extends _$AuthController {
       await repository.signInWithGoogle();
     });
   }
+
+  Future<void> register(String name, String email, String password) async {
+    if (state.isLoading) return;
+
+    state = const AsyncLoading();
+    
+    try {
+      final repository = ref.read(authRepositoryProvider);
+      await repository.signUpWithEmailAndPassword(name, email, password);
+      
+      state = const AsyncData(null);
+    } catch (e, stackTrace) {
+      state = AsyncError(e, stackTrace);
+    }
+  }
 }

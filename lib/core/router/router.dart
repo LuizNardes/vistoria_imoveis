@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:vistoria_imoveis/features/auth/presentation/register_screen.dart';
 import 'package:vistoria_imoveis/features/inspection_details/domain/inspection_details_models.dart';
 
 // Imports das telas
@@ -131,20 +132,24 @@ GoRouter router(RouterRef ref) {
           return ReportPreviewScreen(inspectionId: inspectionId);
         },
       ),
+      GoRoute(
+        path: '/register',
+        builder: (context, state) => const RegisterScreen(),
+      ),
     ],
 
-    // Lógica de Guarda (Redirecionamento)
     redirect: (context, state) {
       if (authState.isLoading) return null;
       
       final isLoggedIn = authState.valueOrNull != null;
-      final isLoggingIn = state.uri.toString() == '/login';
+      
+      final isAuthRoute = state.uri.toString() == '/login' || state.uri.toString() == '/register';
 
-      if (!isLoggedIn && !isLoggingIn) {
+      if (!isLoggedIn && !isAuthRoute) {
         return '/login';
       }
 
-      if (isLoggedIn && isLoggingIn) {
+      if (isLoggedIn && isAuthRoute) {
         return '/';
       }
 

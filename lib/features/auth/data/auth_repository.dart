@@ -40,13 +40,20 @@ class AuthRepository {
   // Getter para o Stream de mudanças de estado
   Stream<User?> get authStateChanges => _auth.authStateChanges();
 
-  // Método de Login
   Future<void> signInWithEmailAndPassword(String email, String password) async {
-    // O Firebase lança exceções (FirebaseAuthException) que trataremos na UI/Controller
     await _auth.signInWithEmailAndPassword(
       email: email,
       password: password,
     );
+  }
+
+  Future<void> signUpWithEmailAndPassword(String name, String email, String password) async {
+    final userCredential = await _auth.createUserWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
+    
+    await userCredential.user?.updateDisplayName(name);
   }
 
   // Método de Logout

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'login_controller.dart';
 import 'auth_controller.dart';
+import 'package:vistoria_imoveis/core/errors/firebase_errors.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -29,9 +31,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     // Listener para mostrar erros via SnackBar (side-effects)
     ref.listen(loginControllerProvider, (previous, next) {
-      if (next.hasError) {
+      if (next is AsyncError) {
+        final mensagem = getFirebaseAuthErrorMessage(next.error);
+        
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro: ${next.error}')),
+          SnackBar(
+            content: Text(mensagem),
+            backgroundColor: Colors.red.shade700,
+          ),
         );
       }
     });
@@ -63,21 +70,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   obscureText: true,
                   validator: (value) => value!.isEmpty ? 'Informe a senha' : null,
                 ),
-                const SizedBox(height: 5),
-                FilledButton.icon(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: Colors.black87,
-                    minimumSize: const Size.fromHeight(50),
-                    side: const BorderSide(color: Colors.grey),
-                  ),
-                  icon: Image.asset('assets/icon/google.png', height: 24),
-                  label: const Text('Entrar com o Google'),
-                  onPressed: () async {
-                    ref.read(authControllerProvider.notifier).loginWithGoogle();
-                  },
-                ),
-                const SizedBox(height: 15),
+                const SizedBox(height: 10),
                 SizedBox(
                   width: double.infinity,
                   height: 48,
@@ -94,6 +87,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           },
                           child: const Text('ENTRAR'),
                         ),
+                ),
+                const SizedBox(height: 24),
+                TextButton(
+                  onPressed: () => context.push('/register'), 
+                  child: const Text('Ainda não tem conta? Crie a sua aqui'),
+                ),
+                const SizedBox(height: 75),
+                FilledButton.icon(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: Colors.black87,
+                    minimumSize: const Size.fromHeight(50),
+                    side: const BorderSide(color: Colors.grey),
+                  ),
+                  icon: Image.asset('assets/icon/google.png', height: 24),
+                  label: const Text('Entrar com o Google'),
+                  onPressed: () async {
+                    ref.read(authControllerProvider.notifier).loginWithGoogle();
+                  },
                 ),
               ],
             ),
