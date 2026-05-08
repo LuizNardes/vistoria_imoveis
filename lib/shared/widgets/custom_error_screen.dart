@@ -33,26 +33,11 @@ class CustomErrorScreen extends StatelessWidget {
               ),
               const SizedBox(height: 32),
 
-              // Botão de Ação (Tenta reconstruir ou voltar)
               FilledButton.icon(
-                onPressed: () {
-                   // Tenta voltar para a tela anterior (reset stack simples)
-                   // Em produção, idealmente reiniciamos o router para a Home
-                   Navigator.of(context).maybePop(); 
-                },
+                onPressed: () => Navigator.of(context).maybePop(),
                 icon: const Icon(Icons.refresh),
                 label: const Text('Tentar Novamente'),
               ),
-
-              // Detalhes técnicos (Só em Debug)
-              /*if (false) // Mude para kDebugMode se quiser ver o erro em dev
-                Padding(
-                  padding: const EdgeInsets.only(top: 20),
-                  child: Text(
-                    details.exception.toString(),
-                    style: const TextStyle(fontSize: 10, color: Colors.grey),
-                  ),
-                ),*/
             ],
           ),
         ),

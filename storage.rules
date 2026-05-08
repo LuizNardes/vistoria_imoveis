@@ -4,16 +4,19 @@ service firebase.storage {
   match /b/{bucket}/o {
     
     match /inspections/{inspectionId}/{allPaths=**} {
-      
-      // 1. Permite LEITURA se estiver autenticado
-      allow read: if request.auth != null;
 
-      // 2. Permite GRAVAÇÃO (Create/Update) com validações rígidas
-      allow write: if request.auth != null
-                   // Valida tipo de arquivo (Apenas Imagens)
+      function isOwner() {
+        return request.auth != null &&
+               firestore.get(/databases/(default)/documents/inspections/$(inspectionId)).data.userId == request.auth.uid;
+      }
+
+      // Apenas o dono da vistoria pode ler os arquivos
+      allow read: if isOwner();
+
+      // Apenas o dono pode gravar; valida tipo (imagem) e tamanho (máx 5MB)
+      allow write: if isOwner()
                    && request.resource.contentType.matches('image/.*')
-                   // Valida tamanho (Máximo 5MB)
-                   && request.resource.size < 5 * 1024 * 1024
+                   && request.resource.size < 5 * 1024 * 1024;
     }
     
     // Nega tudo que não for na pasta inspections

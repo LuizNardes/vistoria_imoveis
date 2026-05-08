@@ -51,11 +51,7 @@ class InspectionItem with _$InspectionItem {
     @Default(ItemCondition.ok) ItemCondition condition,
     String? notes,
     @Default([]) List<String> photos,
-    
-    // --- CAMPO ADICIONADO ---
-    @TimestampConverter() DateTime? updatedAt, 
-    // ------------------------
-    
+    @TimestampConverter() DateTime? updatedAt,
   }) = _InspectionItem;
 
   factory InspectionItem.fromJson(Map<String, dynamic> json) =>

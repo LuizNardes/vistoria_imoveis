@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "340371444506-i07tui4bj77v1pe4gs7sj2f0qrnbsl64.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "br.com.vistoria.vistoria_imoveis",
+            "certificate_hash": "9e54067d17e91ce2279405d680f51e25ed024f9f"
+          }
+        },
+        {
           "client_id": "340371444506-ig59uqvu6r2rulr4fku4tlk7o7uer5un.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {

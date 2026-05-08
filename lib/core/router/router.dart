@@ -24,7 +24,7 @@ GoRouter router(RouterRef ref) {
 
   return GoRouter(
     initialLocation: '/',
-    debugLogDiagnostics: true,
+    debugLogDiagnostics: false,
     
     // Este listenable faz o router reagir a mudanças no stream (Log in / Log out)
     refreshListenable: GoRouterRefreshStream(authStream),
@@ -55,66 +55,13 @@ GoRouter router(RouterRef ref) {
           final inspectionId = state.pathParameters['inspectionId']!;
           return InspectionDetailsScreen(inspectionId: inspectionId);
         },
-        // --- SUB-ROTAS (Aninhadas) ---
         routes: [
           GoRoute(
-            // Sub-rota NÃO TEM barra "/" no início
-            path: 'room/:roomId', 
+            path: 'room/:roomId',
             builder: (context, state) {
               final inspectionId = state.pathParameters['inspectionId']!;
               final roomId = state.pathParameters['roomId']!;
-              
-              // Se você estiver passando o objeto 'room' via extra na tela anterior,
-              // pode descomentar abaixo:
-              // final room = state.extra as InspectionRoom?;
-
-              return RoomInspectionScreen(
-                inspectionId: inspectionId,
-                roomId: roomId,
-              );
-            },
-          ),
-        ],
-      ),
-      GoRoute(
-        path: '/report-preview/:inspectionId',
-        builder: (context, state) {
-          final inspectionId = state.pathParameters['inspectionId']!;
-          return ReportPreviewScreen(inspectionId: inspectionId);
-        },
-      ),
-      GoRoute(
-        path: '/inspection/:inspectionId',
-        builder: (context, state) {
-          // Extrai o ID da URL
-          final inspectionId = state.pathParameters['inspectionId']!;
-          
-          return InspectionDetailsScreen(
-            inspectionId: inspectionId,
-          );
-        },
-        // (Opcional) Aqui dentro colocaremos a sub-rota dos itens na próxima fase
-        // routes: [ ... ] 
-      ),
-      GoRoute(
-        path: '/inspection/:inspectionId',
-        builder: (context, state) {
-          final inspectionId = state.pathParameters['inspectionId']!;
-          return InspectionDetailsScreen(inspectionId: inspectionId);
-        },
-        // --- ADICIONE ESTE BLOCO 'routes' ---
-        routes: [
-          GoRoute(
-            // Sub-rota: o path final será /inspection/123/room/456
-            path: 'room/:roomId', 
-            builder: (context, state) {
-              final inspectionId = state.pathParameters['inspectionId']!;
-              final roomId = state.pathParameters['roomId']!;
-              
-              // Pegamos o objeto 'room' se ele tiver sido passado via 'extra'
-              // Isso permite passar o nome do cômodo para o título
-              final roomData = state.extra as InspectionRoom?; 
-
+              final roomData = state.extra as InspectionRoom?;
               return RoomInspectionScreen(
                 inspectionId: inspectionId,
                 roomId: roomId,
@@ -123,8 +70,9 @@ GoRouter router(RouterRef ref) {
             },
           ),
         ],
-        // ------------------------------------
       ),
+
+      // 5. Rota Preview do Relatório
       GoRoute(
         path: '/report-preview/:inspectionId',
         builder: (context, state) {
@@ -143,7 +91,7 @@ GoRouter router(RouterRef ref) {
       
       final isLoggedIn = authState.valueOrNull != null;
       
-      final isAuthRoute = state.uri.toString() == '/login' || state.uri.toString() == '/register';
+      final isAuthRoute = state.matchedLocation == '/login' || state.matchedLocation == '/register';
 
       if (!isLoggedIn && !isAuthRoute) {
         return '/login';

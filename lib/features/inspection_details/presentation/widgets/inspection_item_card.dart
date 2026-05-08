@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -27,6 +29,7 @@ class _InspectionItemCardState extends ConsumerState<InspectionItemCard> {
   // Estado local para feedback visual imediato sem rebuildar a lista inteira
   bool _isUploading = false;
   late TextEditingController _notesController;
+  Timer? _debounceTimer;
 
   @override
   void initState() {
@@ -46,6 +49,7 @@ class _InspectionItemCardState extends ConsumerState<InspectionItemCard> {
 
   @override
   void dispose() {
+    _debounceTimer?.cancel();
     _notesController.dispose();
     super.dispose();
   }
@@ -112,8 +116,8 @@ class _InspectionItemCardState extends ConsumerState<InspectionItemCard> {
       case ItemCondition.ok: return Colors.green;
       case ItemCondition.damaged: return Colors.red;
       case ItemCondition.repairNeeded: return Colors.orange;
+      case ItemCondition.dirty: return Colors.amber.shade700;
       case ItemCondition.notApplicable: return Colors.grey;
-      default: return Colors.grey;
     }
   }
 
@@ -139,7 +143,9 @@ class _InspectionItemCardState extends ConsumerState<InspectionItemCard> {
             child: SegmentedButton<ItemCondition>(
               segments: const [
                 ButtonSegment(value: ItemCondition.ok, label: Text('OK')),
-                ButtonSegment(value: ItemCondition.damaged, label: Text('Avariado')),
+                ButtonSegment(value: ItemCondition.damaged, label: Text('Avaria')),
+                ButtonSegment(value: ItemCondition.repairNeeded, label: Text('Reparo')),
+                ButtonSegment(value: ItemCondition.dirty, label: Text('Sujo')),
                 ButtonSegment(value: ItemCondition.notApplicable, label: Text('N/A')),
               ],
               selected: {widget.item.condition},
@@ -160,10 +166,12 @@ class _InspectionItemCardState extends ConsumerState<InspectionItemCard> {
           TextFormField(
             controller: _notesController,
             onChanged: (val) {
-                // Implementar debounce aqui se desejar
+              _debounceTimer?.cancel();
+              _debounceTimer = Timer(const Duration(milliseconds: 600), () {
                 ref.read(roomInspectionControllerProvider.notifier).updateItemNotes(
-                  widget.inspectionId, widget.roomId, widget.item, val
+                  widget.inspectionId, widget.roomId, widget.item, val,
                 );
+              });
             },
             maxLines: 2,
             decoration: const InputDecoration(

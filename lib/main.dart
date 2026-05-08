@@ -13,23 +13,15 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  // 1. Intercepta erros de construção de Widgets (Substitui Red Screen of Death)
+  // 2. Intercepta erros de construção de Widgets (Substitui Red Screen of Death)
   ErrorWidget.builder = (FlutterErrorDetails details) {
     return CustomErrorScreen(details: details);
   };
 
-  // 2. Garante inicialização da Engine
-  WidgetsFlutterBinding.ensureInitialized();
-
-  // 3. Inicializa Firebase
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-
-  // 4. Configura Crashlytics para erros do Flutter (Tela vermelha / Widgets)
+  // 3. Configura Crashlytics para erros do Flutter (Tela vermelha / Widgets)
   FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
 
-  // 5. Configura Crashlytics para erros Assíncronos (Futures, Streams fora da árvore de widgets)
+  // 4. Configura Crashlytics para erros Assíncronos (Futures, Streams fora da árvore de widgets)
   PlatformDispatcher.instance.onError = (error, stack) {
     FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
     return true;

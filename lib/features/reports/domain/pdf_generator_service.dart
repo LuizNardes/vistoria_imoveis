@@ -305,8 +305,6 @@ class PdfGeneratorService {
       }
       return null;
     } catch (e) {
-      // Falha silenciosa ou log
-      // print("Erro ao baixar imagem PDF: $e");
       return null;
     }
   }
