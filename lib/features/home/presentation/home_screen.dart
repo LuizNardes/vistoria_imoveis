@@ -22,10 +22,33 @@ class HomeScreen extends ConsumerWidget {
         title: const Text('Minhas Vistorias'),
         centerTitle: false,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            tooltip: 'Sair',
-            onPressed: () => ref.read(authRepositoryProvider).signOut(),
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert),
+            onSelected: (value) {
+              if (value == 'logout') {
+                ref.read(authRepositoryProvider).signOut();
+              } else if (value == 'delete_account') {
+                context.push('/delete-account');
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'logout',
+                child: ListTile(
+                  leading: Icon(Icons.logout),
+                  title: Text('Sair'),
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'delete_account',
+                child: ListTile(
+                  leading: Icon(Icons.delete_forever, color: Colors.red),
+                  title: Text('Excluir conta', style: TextStyle(color: Colors.red)),
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+            ],
           ),
         ],
       ),

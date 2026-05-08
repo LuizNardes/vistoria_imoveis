@@ -73,6 +73,15 @@ class InspectionsRepository {
     await _inspectionsRef.doc(id).delete();
   }
 
+  Future<List<String>> getAllUserInspectionIds() async {
+    final user = _auth.currentUser;
+    if (user == null) return [];
+    final snapshot = await _inspectionsRef
+        .where('userId', isEqualTo: user.uid)
+        .get();
+    return snapshot.docs.map((d) => d.id).toList();
+  }
+
   Future<void> updateStatus(String id, InspectionStatus status) async {
     await _inspectionsRef.doc(id).update({
       'status': status.name,

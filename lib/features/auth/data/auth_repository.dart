@@ -56,9 +56,43 @@ class AuthRepository {
     await userCredential.user?.updateDisplayName(name);
   }
 
-  // Método de Logout
+  String? get currentUserEmail => _auth.currentUser?.email;
+
+  bool get isGoogleUser =>
+      _auth.currentUser?.providerData.any((p) => p.providerId == 'google.com') ?? false;
+
   Future<void> signOut() async {
     await _auth.signOut();
+  }
+
+  Future<void> reauthenticateWithPassword(String password) async {
+    final user = _auth.currentUser;
+    if (user == null || user.email == null) throw Exception('Usuário não autenticado');
+    final credential = EmailAuthProvider.credential(email: user.email!, password: password);
+    await user.reauthenticateWithCredential(credential);
+  }
+
+  Future<void> reauthenticateWithGoogle() async {
+    final GoogleSignIn googleSignIn = GoogleSignIn.instance;
+    if (!_isGoogleInitialized) {
+      await googleSignIn.initialize();
+      _isGoogleInitialized = true;
+    }
+    final googleUser = await googleSignIn.authenticate();
+    if (googleUser == null) throw Exception('Autenticação com Google cancelada');
+    final googleAuth = googleUser.authentication;
+    final authorization = await googleUser.authorizationClient.authorizationForScopes(['email', 'profile']);
+    final credential = GoogleAuthProvider.credential(
+      idToken: googleAuth.idToken,
+      accessToken: authorization?.accessToken,
+    );
+    await _auth.currentUser!.reauthenticateWithCredential(credential);
+  }
+
+  Future<void> deleteAccount() async {
+    final user = _auth.currentUser;
+    if (user == null) throw Exception('Usuário não autenticado');
+    await user.delete();
   }
 
   Future<UserCredential?> signInWithGoogle() async {

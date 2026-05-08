@@ -151,7 +151,15 @@ class InspectionDetailsRepository {
     await _itemsRef(inspectionId, roomId).doc(itemId).delete();
   }
 
-  /// 9. Atualizar contadores do cômodo diretamente
+  /// 9. Deletar todos os cômodos e itens de uma inspeção (usado na exclusão de conta)
+  Future<void> deleteAllRoomsForInspection(String inspectionId) async {
+    final rooms = await _roomsRef(inspectionId).get();
+    for (final room in rooms.docs) {
+      await deleteRoom(inspectionId, room.id);
+    }
+  }
+
+  /// 10. Atualizar contadores do cômodo diretamente
   Future<void> updateRoomCounters(String inspectionId, String roomId, int total, int completed) async {
     await _firestore.doc('inspections/$inspectionId/rooms/$roomId').update({
       'totalItems': total,

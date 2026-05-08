@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:vistoria_imoveis/features/auth/presentation/register_screen.dart';
+import 'package:vistoria_imoveis/features/auth/presentation/delete_account_screen.dart';
 import 'package:vistoria_imoveis/features/inspection_details/domain/inspection_details_models.dart';
 
 // Imports das telas
@@ -83,6 +84,10 @@ GoRouter router(RouterRef ref) {
       GoRoute(
         path: '/register',
         builder: (context, state) => const RegisterScreen(),
+      ),
+      GoRoute(
+        path: '/delete-account',
+        builder: (context, state) => const DeleteAccountScreen(),
       ),
     ],
 
